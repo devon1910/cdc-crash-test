@@ -1,6 +1,6 @@
 # Defend it questions and answers
 
-This file records the M0 and M1 review questions and concise answers for later study.
+This file records milestone ownership questions and concise answers for later study.
 
 ## M0 — Plan
 
@@ -61,3 +61,17 @@ Logical decoding exposes committed changes. Separate inserts executed outside an
 ### 13. Why use one WAL segment as E0's small-retention rule, and what does a pass not prove?
 
 A segment-sized bound is a simple, visible local acceptance rule tied to PostgreSQL's WAL storage unit. E0 also reports the raw measurements, so this heuristic can be challenged. The runner requires regular samples, because a long gap could hide retention or health changes. Passing means that the slot advanced and its sampled LSN-distance retention stayed within that bound during a sufficiently observed run. It does not prove durable or exactly-once receiver delivery, nor that the bound is safe for production.
+
+## M4 — Quiet publication and active heartbeat
+
+### 14. Why is the heartbeat table in the publication for both E1 and E2?
+
+Keeping publication membership and Debezium's capture filter identical avoids making the publication change itself an E1/E2 difference. E1 leaves the row untouched. E2's action query updates it every 10 seconds, creating a published change Debezium can process. The `noise` table stays outside the publication in both runs.
+
+### 15. Why use an action query rather than only `heartbeat.interval.ms`?
+
+With no `orders` writes and `noise` unpublished, a timer-only heartbeat may not give the connector a new published WAL change to acknowledge. The action query creates one deliberately. This tests an active heartbeat strategy, not whether the timer alone is sufficient; that is a separate possible experiment.
+
+### 16. If `confirmed_flush_lsn` moves, has the WAL-retention problem been solved?
+
+Not necessarily. `restart_lsn` marks the oldest WAL still potentially needed by the slot. It can remain stationary while `confirmed_flush_lsn` advances. We therefore compare the distance from current WAL to `restart_lsn` across E1 and E2, as well as both LSNs. Short runs in particular may show flush progress without evidence that retained WAL has stopped growing.

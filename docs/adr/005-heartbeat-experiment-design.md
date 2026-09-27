@@ -1,6 +1,6 @@
 # ADR-005: E2 heartbeat design for the quiet-publication test
 
-Status: PROPOSED — user decision required before M4 implementation
+Status: ACCEPTED — user chose option 2 (active heartbeat with a small table)
 
 ## Context
 
@@ -22,4 +22,4 @@ If approved, M4 may add the heartbeat table and grants, extend the publication a
 
 ## Decision needed
 
-Approve option 2, choose option 1, or request option 3. No M4 code or database changes until this decision is made.
+User approved option 2 before M4 implementation. Timer-only behavior remains untested by this decision.
