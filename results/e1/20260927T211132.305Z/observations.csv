@@ -117,3 +117,7 @@ timestamp,slot_name,active,restart_lsn,confirmed_flush_lsn,wal_status,retained_w
 2026-09-27T21:21:07.3087988Z,cdc_crashtest_slot,true,0/1C7CF90,0/1C7DCB8,reserved,1548240,33554432,UP,62
 2026-09-27T21:21:12.3090406Z,cdc_crashtest_slot,true,0/1C7CF90,0/1C7DCB8,reserved,1560128,33554432,UP,62
 2026-09-27T21:21:17.3091766Z,cdc_crashtest_slot,true,0/1C7CF90,0/1C7DCB8,reserved,1572440,33554432,UP,62
+2026-09-27T21:21:22.3093262Z,cdc_crashtest_slot,true,0/1C7CF90,0/1C7DCB8,reserved,1584808,33554432,UP,62
+2026-09-27T21:21:27.3090391Z,cdc_crashtest_slot,true,0/1C7CF90,0/1C7DCB8,reserved,1596824,33554432,UP,62
+2026-09-27T21:21:32.3090163Z,cdc_crashtest_slot,true,0/1C7CF90,0/1C7DCB8,reserved,1608952,33554432,UP,62
+2026-09-27T21:21:37.3158202Z,cdc_crashtest_slot,true,0/1C7CF90,0/1C7DCB8,reserved,1609248,33554432,UP,62
