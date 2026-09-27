@@ -1,0 +1,2 @@
+timestamp,slot_name,active,restart_lsn,confirmed_flush_lsn,wal_status,retained_wal_bytes,pg_wal_bytes,debezium_health_status,checkpoint_count
+2026-09-27T17:15:53.9526234Z,cdc_crashtest_slot,true,0/19680C8,0/19680C8,reserved,752,16777216,UP,20

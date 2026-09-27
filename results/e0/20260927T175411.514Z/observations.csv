@@ -1,0 +1,7 @@
+timestamp,slot_name,active,restart_lsn,confirmed_flush_lsn,wal_status,retained_wal_bytes,pg_wal_bytes,debezium_health_status,checkpoint_count
+2026-09-27T17:54:11.1646275Z,cdc_crashtest_slot,true,0/196B408,0/1971F00,reserved,27928,16777216,UP,27
+2026-09-27T17:54:16.5169291Z,cdc_crashtest_slot,true,0/1971FC8,0/1971FC8,reserved,18040,16777216,UP,27
+2026-09-27T17:54:21.5189496Z,cdc_crashtest_slot,true,0/1971FC8,0/1971FC8,reserved,28472,16777216,UP,27
+2026-09-27T17:54:26.5174486Z,cdc_crashtest_slot,true,0/1971FC8,0/1971FC8,reserved,38400,16777216,UP,27
+2026-09-27T17:54:31.5174304Z,cdc_crashtest_slot,true,0/1971FC8,0/1971FC8,reserved,48832,16777216,UP,27
+2026-09-27T17:54:36.5364763Z,cdc_crashtest_slot,true,0/1976158,0/197DDC0,reserved,32048,16777216,UP,27
