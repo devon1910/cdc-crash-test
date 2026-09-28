@@ -1,5 +1,7 @@
 # CDC crash test
 
+![Retained-WAL distance over time for no heartbeat, timer-only, and published-table action-query runs; Debezium health was UP throughout.](docs/heartbeat-comparison.svg)
+
 An earlier production incident filled a host disk after an inactive Debezium replication slot retained PostgreSQL WAL. This lab measures that quiet-source failure mode at a small, controlled scale and compares heartbeat configurations.
 
 ## Finding
