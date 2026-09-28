@@ -27,9 +27,9 @@ e2:
 e2-timer:
 	go run ./cmd/m4 -scenario=e2-timer $(E2_TIMER_ARGS)
 
-# Destructive to Compose volumes: intended for isolated experiment comparisons.
+# Deletes Compose volumes after an interactive confirmation.
 m4-comparison:
-	powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-m4-comparison.ps1
+	go run ./cmd/m4comparison
 
 e3:
 	go run ./cmd/e3 $(E3_ARGS)
