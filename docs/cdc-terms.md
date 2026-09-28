@@ -12,6 +12,6 @@
 
 **`restart_lsn`** is the oldest WAL position the slot might still need. This is the position relevant to WAL retention. It can lag behind `confirmed_flush_lsn`, so watching only acknowledgements can miss retention pressure. The lab's `retained_wal_bytes` column is the current WAL LSN minus `restart_lsn`. That byte distance is different from the size of files currently in `pg_wal`. [PostgreSQL replication slots](https://www.postgresql.org/docs/17/view-pg-replication-slots.html)
 
-**Publication** is PostgreSQL's list of tables whose row changes are offered for logical replication. This lab publishes `public.orders`; writes to `public.noise` still generate WAL but are outside that publication.
+**Publication** is PostgreSQL's list of tables whose row changes are offered for logical replication. This lab publishes `public.orders` and the one-row `public.cdc_heartbeat` table used by E2. Writes to `public.noise` still generate WAL but are outside that publication.
 
 **Checkpoint** is a point where PostgreSQL makes changed data pages durable and can recycle WAL segments that are no longer needed. A lagging slot can prevent old segments from being removed. The observer records a cumulative checkpoint counter so runs can be compared with these events. [PostgreSQL WAL configuration](https://www.postgresql.org/docs/17/wal-configuration.html)

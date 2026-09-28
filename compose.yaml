@@ -33,7 +33,7 @@ services:
       context: .
       dockerfile: cmd/receiver/Dockerfile
     ports:
-      - "8081:8081"
+      - "127.0.0.1:8081:8081"
     healthcheck:
       test: ["CMD", "/receiver", "-healthcheck"]
       interval: 5s
@@ -48,7 +48,7 @@ services:
       receiver:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     volumes:
       - ./debezium/${DEBEZIUM_CONFIG:-application.properties}:/debezium/config/application.properties:ro
       - debezium-data:/debezium/data

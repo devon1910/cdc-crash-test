@@ -89,3 +89,17 @@ Graceful shutdown takes time, and Debezium can still acknowledge WAL during it. 
 ### 19. What would an inactive slot and unreachable health endpoint prove?
 
 Together they show that the connector is no longer attached and its HTTP health service is unavailable at the sampled times. They do not prove that all earlier events reached the receiver, that no data was lost, or that the host disk filled. The separate retained-WAL distance measurement shows the source-side storage pressure during this lab run.
+
+## M6 — Reproducibility and interpretation
+
+### 20. Why do we provide both Make targets and direct Go commands?
+
+The Makefile gives a compact, repeatable sequence where GNU Make is installed. The direct `docker compose` and `go run` commands use the same underlying code and work in PowerShell on a Windows machine without Make. Both paths must be run sequentially because each experiment changes the shared Debezium configuration or container state.
+
+### 21. Why is `retained_wal_bytes` not the same as `pg_wal_bytes`?
+
+The first is an LSN byte distance from the slot's `restart_lsn` to the current WAL position. The second is the size of allocated WAL files on disk. PostgreSQL manages those files in segments and may recycle them, so directory size can stay constant even while the slot's retained-WAL distance changes substantially. We report both to avoid treating an LSN-distance trend as direct disk occupancy.
+
+### 22. What still has to be checked before calling v0.1 portable from a fresh clone?
+
+The README gives the exact full-duration command sequence and the current machine has passed a sequential short smoke run plus earlier full-duration runs. A separate clean checkout still needs to run `make up`, E0, E1, E2, and E3 without manual fixes, and confirm four newly generated folders with readable summaries. That checks setup assumptions such as first-time volume initialization, dependency downloads, command availability, and container startup that a reused local stack cannot fully prove.
