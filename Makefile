@@ -1,4 +1,4 @@
-.PHONY: up down reset logs ps e0 e1 e2
+.PHONY: up down reset logs ps e0 e1 e2 e3
 
 up:
 	docker compose up --build -d
@@ -23,3 +23,6 @@ e1:
 
 e2:
 	go run ./cmd/m4 -scenario=e2 $(E2_ARGS)
+
+e3:
+	go run ./cmd/e3 $(E3_ARGS)

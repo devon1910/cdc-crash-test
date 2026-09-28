@@ -75,3 +75,17 @@ With no `orders` writes and `noise` unpublished, a timer-only heartbeat may not 
 ### 16. If `confirmed_flush_lsn` moves, has the WAL-retention problem been solved?
 
 Not necessarily. `restart_lsn` marks the oldest WAL still potentially needed by the slot. It can remain stationary while `confirmed_flush_lsn` advances. We therefore compare the distance from current WAL to `restart_lsn` across E1 and E2, as well as both LSNs. Short runs in particular may show flush progress without evidence that retained WAL has stopped growing.
+
+## M5 — Connector stopped
+
+### 17. Why keep the writer and observer running while stopping Debezium?
+
+The writer continues producing WAL, including captured `orders` changes, while the stopped connector cannot acknowledge them. The observer records the slot and health transitions independently, so the summary can place WAL growth relative to the stop rather than merely comparing two endpoint values.
+
+### 18. Why distinguish the stop request from the completed stop?
+
+Graceful shutdown takes time, and Debezium can still acknowledge WAL during it. The first sample after the stop command finishes is the clean baseline for measuring growth while the connector is definitely stopped. Samples only bound transition times; they do not reveal the exact instant of a change between polls.
+
+### 19. What would an inactive slot and unreachable health endpoint prove?
+
+Together they show that the connector is no longer attached and its HTTP health service is unavailable at the sampled times. They do not prove that all earlier events reached the receiver, that no data was lost, or that the host disk filled. The separate retained-WAL distance measurement shows the source-side storage pressure during this lab run.

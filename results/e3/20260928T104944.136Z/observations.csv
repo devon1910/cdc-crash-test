@@ -1,0 +1,123 @@
+timestamp,slot_name,active,restart_lsn,confirmed_flush_lsn,wal_status,retained_wal_bytes,pg_wal_bytes,debezium_health_status,checkpoint_count
+2026-09-28T10:49:43.669427Z,cdc_crashtest_slot,true,0/1FFDCC0,0/2002B58,reserved,20856,33554432,UP,91
+2026-09-28T10:49:49.1404041Z,cdc_crashtest_slot,true,0/2002E00,0/2002F00,reserved,22392,33554432,UP,91
+2026-09-28T10:49:54.1402856Z,cdc_crashtest_slot,true,0/2002E00,0/2002F00,reserved,44416,33554432,UP,91
+2026-09-28T10:49:59.1403001Z,cdc_crashtest_slot,true,0/2002E00,0/2002F00,reserved,67456,33554432,UP,91
+2026-09-28T10:50:04.1404124Z,cdc_crashtest_slot,true,0/2002E00,0/2002F00,reserved,90760,33554432,UP,91
+2026-09-28T10:50:09.1401129Z,cdc_crashtest_slot,true,0/2002E00,0/2002F00,reserved,113040,33554432,UP,91
+2026-09-28T10:50:14.1403289Z,cdc_crashtest_slot,true,0/2002E00,0/2002F00,reserved,135728,33554432,UP,91
+2026-09-28T10:50:19.1401963Z,cdc_crashtest_slot,true,0/2002E00,0/2002F00,reserved,157784,33554432,UP,91
+2026-09-28T10:50:24.1410451Z,cdc_crashtest_slot,true,0/2002E00,0/2002F00,reserved,200416,33554432,UP,92
+2026-09-28T10:50:29.1402235Z,cdc_crashtest_slot,true,0/2002E00,0/2002F00,reserved,222880,33554432,UP,92
+2026-09-28T10:50:34.1407121Z,cdc_crashtest_slot,true,0/2002E00,0/2002F00,reserved,254712,33554432,UP,92
+2026-09-28T10:50:39.1401335Z,cdc_crashtest_slot,true,0/2002E00,0/2002F00,reserved,277200,33554432,UP,92
+2026-09-28T10:50:44.1405069Z,cdc_crashtest_slot,true,0/2002E00,0/2002F00,reserved,301080,33554432,UP,92
+2026-09-28T10:50:49.1403622Z,cdc_crashtest_slot,true,0/2004EF8,0/204CC08,reserved,315104,33554432,UP,92
+2026-09-28T10:50:54.1401785Z,cdc_crashtest_slot,true,0/2004EF8,0/204CC08,reserved,337384,33554432,UP,92
+2026-09-28T10:50:59.1403498Z,cdc_crashtest_slot,true,0/2004EF8,0/204CC08,reserved,359928,33554432,UP,92
+2026-09-28T10:51:04.1401433Z,cdc_crashtest_slot,true,0/2004EF8,0/204CC08,reserved,382408,33554432,UP,92
+2026-09-28T10:51:09.1412405Z,cdc_crashtest_slot,true,0/2004EF8,0/204CC08,reserved,405632,33554432,UP,92
+2026-09-28T10:51:14.1403777Z,cdc_crashtest_slot,true,0/2004EF8,0/204CC08,reserved,427768,33554432,UP,92
+2026-09-28T10:51:19.1401246Z,cdc_crashtest_slot,true,0/2004EF8,0/204CC08,reserved,451016,33554432,UP,92
+2026-09-28T10:51:24.1405982Z,cdc_crashtest_slot,true,0/2004EF8,0/204CC08,reserved,473296,33554432,UP,92
+2026-09-28T10:51:29.1402127Z,cdc_crashtest_slot,true,0/2004EF8,0/204CC08,reserved,495816,33554432,UP,92
+2026-09-28T10:51:34.1402908Z,cdc_crashtest_slot,true,0/2004EF8,0/204CC08,reserved,518096,33554432,UP,92
+2026-09-28T10:51:39.1406046Z,cdc_crashtest_slot,true,0/2004EF8,0/204CC08,reserved,540584,33554432,UP,92
+2026-09-28T10:51:44.1401794Z,cdc_crashtest_slot,true,0/2004EF8,0/204CC08,reserved,562920,33554432,UP,92
+2026-09-28T10:51:49.1401257Z,cdc_crashtest_slot,true,0/20594B8,0/208F678,reserved,240632,33554432,UP,92
+2026-09-28T10:51:54.1402401Z,cdc_crashtest_slot,true,0/20594B8,0/208F678,reserved,263648,33554432,UP,92
+2026-09-28T10:51:59.1402165Z,cdc_crashtest_slot,true,0/20594B8,0/208F678,reserved,286136,33554432,UP,92
+2026-09-28T10:52:04.1403202Z,cdc_crashtest_slot,true,0/20594B8,0/208F678,reserved,308680,33554432,UP,92
+2026-09-28T10:52:09.1400627Z,cdc_crashtest_slot,true,0/20594B8,0/208F678,reserved,331160,33554432,UP,92
+2026-09-28T10:52:14.1403676Z,cdc_crashtest_slot,true,0/20594B8,0/208F678,reserved,381000,33554432,UP,92
+2026-09-28T10:52:19.1402273Z,cdc_crashtest_slot,true,0/20594B8,0/208F678,reserved,403112,33554432,UP,92
+2026-09-28T10:52:24.1429693Z,cdc_crashtest_slot,true,0/20594B8,0/208F678,reserved,426360,33554432,UP,92
+2026-09-28T10:52:29.1400497Z,cdc_crashtest_slot,true,0/20594B8,0/208F678,reserved,448640,33554432,UP,92
+2026-09-28T10:52:34.1403305Z,cdc_crashtest_slot,true,0/20594B8,0/208F678,reserved,472088,33554432,UP,92
+2026-09-28T10:52:39.140434Z,cdc_crashtest_slot,true,0/20594B8,0/208F678,reserved,494200,33554432,UP,92
+2026-09-28T10:52:44.1404848Z,cdc_crashtest_slot,true,0/20594B8,0/208F678,reserved,516688,33554432,UP,92
+2026-09-28T10:52:49.1405161Z,cdc_crashtest_slot,true,0/20A20E8,0/20D8760,reserved,241136,33554432,UP,92
+2026-09-28T10:52:54.1406391Z,cdc_crashtest_slot,true,0/20A20E8,0/20D8760,reserved,263480,33554432,UP,92
+2026-09-28T10:52:59.1403045Z,cdc_crashtest_slot,true,0/20A20E8,0/20D8760,reserved,286520,33554432,UP,92
+2026-09-28T10:53:04.1412013Z,cdc_crashtest_slot,true,0/20A20E8,0/20D8760,reserved,308984,33554432,UP,92
+2026-09-28T10:53:09.1401505Z,cdc_crashtest_slot,true,0/20A20E8,0/20D8760,reserved,332080,33554432,UP,92
+2026-09-28T10:53:14.140049Z,cdc_crashtest_slot,true,0/20A20E8,0/20D8760,reserved,354768,33554432,UP,92
+2026-09-28T10:53:19.1401207Z,cdc_crashtest_slot,true,0/20A20E8,0/20D8760,reserved,376848,33554432,UP,92
+2026-09-28T10:53:24.1403259Z,cdc_crashtest_slot,true,0/20A20E8,0/20D8760,reserved,399512,33554432,UP,92
+2026-09-28T10:53:29.1401455Z,cdc_crashtest_slot,true,0/20A20E8,0/20D8760,reserved,421648,33554432,UP,92
+2026-09-28T10:53:34.1417585Z,cdc_crashtest_slot,true,0/20A20E8,0/20D8760,reserved,444336,33554432,UP,92
+2026-09-28T10:53:39.1405102Z,cdc_crashtest_slot,true,0/20A20E8,0/20D8760,reserved,467176,33554432,UP,92
+2026-09-28T10:53:44.1401139Z,cdc_crashtest_slot,true,0/20A20E8,0/20D8760,reserved,490656,33554432,UP,92
+2026-09-28T10:53:49.1404661Z,cdc_crashtest_slot,true,0/20DEEB0,0/211AED0,reserved,263448,33554432,UP,92
+2026-09-28T10:53:54.1402116Z,cdc_crashtest_slot,true,0/20DEEB0,0/211AED0,reserved,286136,33554432,UP,92
+2026-09-28T10:53:59.1403664Z,cdc_crashtest_slot,true,0/20DEEB0,0/211AED0,reserved,308416,33554432,UP,92
+2026-09-28T10:54:04.1429311Z,cdc_crashtest_slot,true,0/20DEEB0,0/211AED0,reserved,330936,33554432,UP,92
+2026-09-28T10:54:09.1402402Z,cdc_crashtest_slot,true,0/20DEEB0,0/211AED0,reserved,353216,33554432,UP,92
+2026-09-28T10:54:14.1405053Z,cdc_crashtest_slot,true,0/20DEEB0,0/211AED0,reserved,392040,33554432,UP,92
+2026-09-28T10:54:19.1404115Z,cdc_crashtest_slot,true,0/20DEEB0,0/211AED0,reserved,419264,33554432,UP,92
+2026-09-28T10:54:24.14021Z,cdc_crashtest_slot,true,0/20DEEB0,0/211AED0,reserved,442576,33554432,UP,92
+2026-09-28T10:54:29.1404542Z,cdc_crashtest_slot,true,0/20DEEB0,0/211AED0,reserved,465056,33554432,UP,92
+2026-09-28T10:54:34.1406969Z,cdc_crashtest_slot,true,0/20DEEB0,0/211AED0,reserved,487320,33554432,UP,92
+2026-09-28T10:54:39.1402971Z,cdc_crashtest_slot,true,0/20DEEB0,0/211AED0,reserved,509600,33554432,UP,92
+2026-09-28T10:54:44.1403691Z,cdc_crashtest_slot,true,0/20DEEB0,0/211AED0,reserved,532144,33554432,UP,92
+2026-09-28T10:54:49.1404391Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,231280,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",92
+2026-09-28T10:54:54.1436137Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,253536,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",92
+2026-09-28T10:54:59.140138Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,276640,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",92
+2026-09-28T10:55:04.1402464Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,299120,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",92
+2026-09-28T10:55:09.1406409Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,321408,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",92
+2026-09-28T10:55:14.1401122Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,365720,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",92
+2026-09-28T10:55:19.1401522Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,388472,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",92
+2026-09-28T10:55:24.1401636Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,435320,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:55:29.1403556Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,472160,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:55:34.1401991Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,498816,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:55:39.1402851Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,521480,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:55:44.140462Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,543760,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:55:49.1414824Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,566448,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:55:54.1407008Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,588504,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:55:59.1402491Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,611248,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:56:04.1404748Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,634288,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:56:09.1407372Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,656776,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:56:14.1407493Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,679872,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:56:19.1400644Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,702136,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:56:24.1403236Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,724616,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:56:29.1401338Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,746904,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:56:34.1404522Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,769216,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:56:39.1415873Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,792664,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:56:44.1404334Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,814744,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:56:49.140173Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,838048,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:56:54.140298Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,860328,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:56:59.1400977Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,882792,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:57:04.1401068Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,905072,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:57:09.1404487Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,927616,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:57:14.1403924Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,950656,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:57:19.1409156Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,973120,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:57:24.1401837Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,996216,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:57:29.1434704Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1018904,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:57:34.1408605Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1041392,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:57:39.1403896Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1063448,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:57:44.1402782Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1086192,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:57:49.1401682Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1108272,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:57:54.1403362Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1131520,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:57:59.1404379Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1153776,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:58:04.1409159Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1177280,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:58:09.1403384Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1199360,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:58:14.1406228Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1255944,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:58:19.1403184Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1278224,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:58:24.1402238Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1300944,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:58:29.1401881Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1323784,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:58:34.1401271Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1346272,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:58:39.1404488Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1369368,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:58:44.1402824Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1391832,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:58:49.1403321Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1414112,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:58:54.1404575Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1436600,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:58:59.1405515Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1458936,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:59:04.1406069Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1482160,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:59:09.1401868Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1504440,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:59:14.1403595Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1527744,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:59:19.1404108Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1550224,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:59:24.1401433Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1572512,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:59:29.1402138Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1594768,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:59:34.143939Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1617512,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:59:39.1401923Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1639592,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:59:44.1414924Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1662840,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
+2026-09-28T10:59:49.1621185Z,cdc_crashtest_slot,false,0/212E188,0/2160FE0,reserved,1662840,33554432,"ERROR: Get ""http://localhost:8080/q/health"": dial tcp [::1]:8080: connectex: No connection could be made because the target machine actively refused it.",93
