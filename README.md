@@ -18,7 +18,7 @@ PostgreSQL 17 -- published orders + heartbeat changes --> Debezium Server 3.6 --
 - Docker Engine/Desktop with the `docker compose` plugin running.
 - Go 1.25 or newer on the host; GNU Make is optional on Windows.
 - Free host ports 55432 (PostgreSQL), 8080 (Debezium health), and 8081 (receiver). All three are published to loopback only.
-- Internet access the first time Docker pulls images or Go downloads modules. Each default experiment takes about 10 minutes, so the four-run sequence takes about 40 minutes plus startup.
+- Internet access the first time Docker pulls images or Go downloads modules. Each default experiment takes about 10 minutes; E0–E3 take about 40 minutes, and the three-case clean M4 comparison takes about 30 minutes plus startup.
 
 This is **local-only** configuration. PostgreSQL uses `trust` authentication with no password, including on the Compose network; its host port is bound to `127.0.0.1`. Do not put this stack on a shared network or reuse its database configuration in production. `make reset` removes the named PostgreSQL and Debezium volumes and permanently discards their lab data and offsets. Ordinary `make down` keeps those volumes.
 
@@ -36,7 +36,7 @@ make e2
 make e3
 ```
 
-Run the experiments **sequentially**, not in parallel. Each command prints its timestamped result directory. `make up` builds the receiver, creates the PostgreSQL database and publication on a fresh volume, and starts Debezium. E1 and E2 switch the Debezium config and preserve the database, slot, and offsets. E3 stops Debezium halfway through, measures the stopped period, and restarts it afterward. Do not interrupt E3 between its stop and restart; if you do, recover with `docker compose up -d debezium`.
+Run the experiments **sequentially**, not in parallel. Each command prints its timestamped result directory. `make up` builds the receiver, creates the PostgreSQL database and publication on a fresh volume, and starts Debezium. In the basic sequence E1 and E2 switch the Debezium config but preserve the database, slot, and offsets; consequently E2 can inherit E1's backlog. Use the clean M4 comparison below when you want independent baselines. E3 stops Debezium halfway through, measures the stopped period, and restarts it afterward. Do not interrupt E3 between its stop and restart; if you do, recover with `docker compose up -d debezium`.
 
 On Windows PowerShell without GNU Make, the equivalent commands are:
 
@@ -44,6 +44,7 @@ On Windows PowerShell without GNU Make, the equivalent commands are:
 docker compose up --build -d
 go run ./cmd/e0
 go run ./cmd/m4 -scenario=e1
+go run ./cmd/m4 -scenario=e2-timer
 go run ./cmd/m4 -scenario=e2
 go run ./cmd/e3
 ```
@@ -65,10 +66,13 @@ Expect PostgreSQL and receiver healthy, Debezium running, and health `UP` except
 | --- | --- | --- | --- |
 | E0 baseline | `orders` | Running, heartbeat off | Does the slot acknowledge changes and keep retained-WAL distance small? |
 | E1 quiet source | `noise` only | Running, heartbeat off | Can the slot appear healthy while its LSNs stall and WAL distance grows? |
+| E2 timer-only heartbeat | `noise` only | Running; `heartbeat.interval.ms=10000`, no action query | Is the timer setting alone sufficient to advance the slot? |
 | E2 active heartbeat | `noise` only | Running; heartbeat action updates `cdc_heartbeat` | Do slot LSNs advance and WAL distance stay lower than in E1? |
 | E3 connector stopped | `orders` and `noise` | Stopped halfway through | When do the slot become inactive, health fail, and WAL distance rise? |
 
-Each run writes `results/e0`, `results/e1`, `results/e2`, or `results/e3` followed by a UTC timestamp directory containing `observations.csv` and `summary.md`. Read each summary first, then inspect its CSV if a result is surprising. E0's pass rule is a **lab heuristic**, not a production safety threshold. E1 and E2 should be compared by changes during each run, not absolute starting LSNs; the connector is restarted between them. E3 reports sampled time bounds, not the exact instant each signal changed. The measured full-run [E1/E2 comparison](results/m4-comparison.md) and [E3 summary](results/e3/20260928T104944.136Z/summary.md) are examples, not guaranteed numbers for another machine.
+Each run writes `results/e0`, `results/e1`, `results/e2-timer`, `results/e2`, or `results/e3` followed by a UTC timestamp directory containing `observations.csv` and `summary.md`. Read each summary first, then inspect its CSV if a result is surprising. E0's pass rule is a **lab heuristic**, not a production safety threshold. E3 reports sampled time bounds, not the exact instant each signal changed. The [independent M4 comparison](results/m4-comparison.md) reports the measured E1, timer-only, and active-heartbeat results; these are examples, not guaranteed numbers for another machine.
+
+For a fair M4 comparison, run `make m4-comparison` (or `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run-m4-comparison.ps1`). The script asks before it runs and removes this Compose project's PostgreSQL and Debezium volumes before **each** variant; that permanently erases the lab database, slot, and offsets. It leaves result files intact and stops the containers afterward. Do not run it if you need to retain the current lab volume state.
 
 ## Acceptance run and current status
 
@@ -82,6 +86,8 @@ The v0.1 milestone sequence M0–M6 is complete. On 2026-09-28, the full default
 | E3 | 5,999 writes to each table. The slot became inactive and health failed 3.393 seconds after Docker confirmed the stop; retained-WAL growth above the completed-stop baseline was sampled 8.392 seconds after completion. Retained-WAL distance ended at 1,702,192 bytes. |
 
 The [acceptance record](docs/m6-acceptance.md) links all four summaries and CSVs and documents one inconclusive E3 attempt followed by a successful rerun. The runner now measures stopped-state transitions from Docker's stop-completion time. This completes the original v0.1 plan; using the lab against another team's CDC deployment would require a separate configurable-connector milestone.
+
+The later [clean M4 comparison](results/m4-comparison.md) reset volumes between E1, timer-only, and active-heartbeat runs. In that separate 2026-09-28 measurement, timer-only matched E1: both remained healthy with a stationary `confirmed_flush_lsn` and growing retained-WAL distance. The published-table action query advanced the LSN and held the distance much lower. This resolves the earlier open timer-only question and removes E1's inherited backlog from the comparison.
 
 ## Reading `observations.csv`
 

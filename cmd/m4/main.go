@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -55,7 +56,9 @@ func heartbeatCount(ctx context.Context, db *sql.DB) (int64, error) {
 
 func configure(ctx context.Context, scenario string) error {
 	config := "application.properties"
-	if scenario == "e2" {
+	if scenario == "e2-timer" {
+		config = "application-e2-timer.properties"
+	} else if scenario == "e2" {
 		config = "application-e2.properties"
 	}
 	cmd := exec.CommandContext(ctx, "docker", "compose", "up", "-d", "--force-recreate", "debezium")
@@ -109,7 +112,7 @@ func lsnValue(lsn string) (uint64, error) {
 	return hi<<32 | lo, nil
 }
 
-func summary(scenario string, samples []observe.Observation, count int64, loadTime time.Duration, startHB, endHB int64, rate int, duration, interval, settle time.Duration) (string, error) {
+func summary(scenario string, samples []observe.Observation, count int64, loadTime time.Duration, startHB, endHB int64, rate, noiseBytes int, duration, interval, settle time.Duration, pgVersion, images string) (string, error) {
 	if len(samples) < 2 {
 		return "", errors.New("at least two observations required")
 	}
@@ -123,8 +126,9 @@ func summary(scenario string, samples []observe.Observation, count int64, loadTi
 		return "", err
 	}
 	maxGap := time.Duration(0)
+	minRetained := samples[0].RetainedWALBytes.Int64
 	peakRetained := int64(0)
-	allHealthy := true
+	healthCounts := make(map[string]int)
 	allActive := true
 	for i, s := range samples {
 		if !s.RetainedWALBytes.Valid {
@@ -133,9 +137,10 @@ func summary(scenario string, samples []observe.Observation, count int64, loadTi
 		if s.RetainedWALBytes.Int64 > peakRetained {
 			peakRetained = s.RetainedWALBytes.Int64
 		}
-		if s.DebeziumHealth != "UP" {
-			allHealthy = false
+		if s.RetainedWALBytes.Int64 < minRetained {
+			minRetained = s.RetainedWALBytes.Int64
 		}
+		healthCounts[s.DebeziumHealth]++
 		if !s.Active {
 			allActive = false
 		}
@@ -149,27 +154,81 @@ func summary(scenario string, samples []observe.Observation, count int64, loadTi
 			}
 		}
 	}
+	seconds := last.Timestamp.Sub(first.Timestamp).Seconds()
+	if seconds <= 0 {
+		return "", errors.New("sample timestamps did not advance")
+	}
+	flushAdvanced := lastLSN > firstLSN
+	retainedDelta := last.RetainedWALBytes.Int64 - first.RetainedWALBytes.Int64
+	growthRate := float64(retainedDelta) / seconds
+	allHealthy := healthCounts["UP"] == len(samples)
+	label, question, setting := scenarioText(scenario)
 	var b strings.Builder
-	fmt.Fprintf(&b, "# %s: noise-only workload\n\n", strings.ToUpper(scenario))
-	fmt.Fprintf(&b, "- Noise: %d committed rows at requested %d/s for %s (actual load %s). Orders written by runner: 0.\n", count, rate, duration, loadTime.Round(time.Millisecond))
-	fmt.Fprintf(&b, "- Observer: %d samples every %s plus %s settle; largest gap %s (limit %s).\n", len(samples), interval, settle, maxGap.Round(time.Millisecond), 2*interval+2*time.Second)
-	fmt.Fprintf(&b, "- Slot: `%s`; active throughout: %t; Debezium healthy throughout: %t.\n", first.SlotName, allActive, allHealthy)
-	fmt.Fprintf(&b, "- Confirmed flush LSN: `%s` to `%s`, advanced: %t.\n", first.ConfirmedFlushLSN, last.ConfirmedFlushLSN, lastLSN > firstLSN)
+	fmt.Fprintf(&b, "# %s: noise-only workload\n\n", label)
+	fmt.Fprintf(&b, "Question: %s\n\n", question)
+	fmt.Fprintln(&b, "## Configuration and versions")
+	fmt.Fprintf(&b, "- Workload: %d committed `noise` inserts at %d/second for requested %s (actual %s); payload %d bytes. The runner wrote no `orders` rows.\n", count, rate, duration, loadTime.Round(time.Millisecond), noiseBytes)
+	fmt.Fprintf(&b, "- Observer: %d samples at %s; settle %s; largest gap %s (limit %s).\n", len(samples), interval, settle, maxGap.Round(time.Millisecond), 2*interval+2*time.Second)
+	fmt.Fprintf(&b, "- PostgreSQL: %s. Go: %s.\n- Compose images:\n", pgVersion, runtime.Version())
+	for _, image := range strings.Split(strings.TrimSpace(images), "\n") {
+		fmt.Fprintf(&b, "  - `%s`\n", strings.TrimSpace(image))
+	}
+	fmt.Fprintf(&b, "- Slot: `%s`. Heartbeat setting: %s.\n", first.SlotName, setting)
+	fmt.Fprintf(&b, "- Heartbeat table updates: %d.\n\n", endHB-startHB)
+	fmt.Fprintln(&b, "## Observations")
+	fmt.Fprintf(&b, "- Sample window: %s to %s UTC.\n", first.Timestamp.Format(time.RFC3339), last.Timestamp.Format(time.RFC3339))
+	fmt.Fprintf(&b, "- Slot active: %t throughout. Debezium health: `UP` %d/%d samples.", allActive, healthCounts["UP"], len(samples))
+	for status, count := range healthCounts {
+		if status != "UP" {
+			fmt.Fprintf(&b, " `%s` %d/%d.", status, count, len(samples))
+		}
+	}
+	fmt.Fprintln(&b)
+	fmt.Fprintf(&b, "- Confirmed flush LSN: `%s` to `%s`; advanced: %t.\n", first.ConfirmedFlushLSN, last.ConfirmedFlushLSN, flushAdvanced)
 	fmt.Fprintf(&b, "- Restart LSN: `%s` to `%s`.\n", first.RestartLSN, last.RestartLSN)
-	fmt.Fprintf(&b, "- Retained-WAL distance: %d to %d bytes; peak %d bytes.\n", first.RetainedWALBytes.Int64, last.RetainedWALBytes.Int64, peakRetained)
-	fmt.Fprintf(&b, "- pg_wal on-disk size: %d to %d bytes.\n", first.PGWALBytes, last.PGWALBytes)
-	fmt.Fprintf(&b, "- Heartbeat row updates during run: %d.\n", endHB-startHB)
-	fmt.Fprintf(&b, "- Debezium setting: %s.\n\n", map[string]string{"e1": "heartbeats disabled", "e2": "10-second heartbeat plus published action query"}[scenario])
+	fmt.Fprintf(&b, "- Retained-WAL distance: start %d, end %d, minimum %d, peak %d bytes; net change %d bytes (%.1f bytes/second).\n", first.RetainedWALBytes.Int64, last.RetainedWALBytes.Int64, minRetained, peakRetained, retainedDelta, growthRate)
+	fmt.Fprintf(&b, "- `pg_wal` directory size: %d to %d bytes. Checkpoint counter: %d to %d.\n\n", first.PGWALBytes, last.PGWALBytes, first.CheckpointCount, last.CheckpointCount)
+	fmt.Fprintln(&b, "## Verdict")
 	if maxGap > 2*interval+2*time.Second || !allActive || !allHealthy {
-		fmt.Fprintln(&b, "Verdict: inconclusive because sample coverage, slot activity, or health failed. Inspect observations.csv and repeat before drawing a comparison.")
+		fmt.Fprintln(&b, "Inconclusive: slot activity, Debezium health, or sample coverage did not meet the experiment's observation requirements. Inspect the CSV and repeat before comparing this run.")
 	} else {
-		fmt.Fprintln(&b, "Verdict: observation complete. Compare this run with the other scenario; LSN advance alone does not prove end-to-end event delivery. WAL distance is from the slot's restart position; pg_wal size is allocated files on disk.")
+		switch scenario {
+		case "e1":
+			if flushAdvanced {
+				fmt.Fprintf(&b, "With heartbeats disabled, the confirmed flush LSN advanced while only unpublished `noise` rows were written. This run did not reproduce a stationary flush position; retained-WAL distance changed by %d bytes.\n", retainedDelta)
+			} else {
+				fmt.Fprintf(&b, "With heartbeats disabled, the confirmed flush LSN stayed fixed while Debezium remained healthy and active. Retained-WAL distance changed by %d bytes. This run reproduced the quiet-source stall.\n", retainedDelta)
+			}
+		case "e2-timer":
+			if flushAdvanced {
+				fmt.Fprintf(&b, "The 10-second timer-only heartbeat coincided with confirmed flush LSN advancement. Retained-WAL distance changed by %d bytes. This run supports timer-only progress under this setup; it does not establish delivery of every event.\n", retainedDelta)
+			} else {
+				fmt.Fprintf(&b, "The 10-second timer-only heartbeat did not advance the confirmed flush LSN while only unpublished `noise` rows were written. Retained-WAL distance changed by %d bytes. Under this setup, timer-only did not prevent the quiet-source stall.\n", retainedDelta)
+			}
+		case "e2":
+			if flushAdvanced {
+				fmt.Fprintf(&b, "The active heartbeat action query accompanied confirmed flush LSN advancement. Retained-WAL distance changed by %d bytes. Compare this trend with the separately reset E1 and timer-only runs; LSN progress alone does not prove sink delivery.\n", retainedDelta)
+			} else {
+				fmt.Fprintf(&b, "The active heartbeat action query did not advance the confirmed flush LSN in this run. Retained-WAL distance changed by %d bytes; inspect the heartbeat row update count and CSV before drawing a conclusion.\n", retainedDelta)
+			}
+		}
 	}
 	return b.String(), nil
 }
 
+func scenarioText(scenario string) (label, question, setting string) {
+	switch scenario {
+	case "e1":
+		return "E1: quiet source, no heartbeat", "When only the unpublished noise table changes and heartbeats are disabled, does a healthy Debezium slot continue to advance?", "disabled"
+	case "e2-timer":
+		return "E2 timer-only: quiet source", "Is heartbeat.interval.ms alone enough to advance the slot when only the unpublished noise table changes?", "heartbeat.interval.ms=10000; no action query"
+	default:
+		return "E2 active: quiet source", "Does a heartbeat action query that updates a published table keep the slot advancing when only the noise table receives application writes?", "heartbeat.interval.ms=10000 plus published-table action query"
+	}
+}
+
 func run() error {
-	scenario := flag.String("scenario", "", "e1 or e2")
+	scenario := flag.String("scenario", "", "e1, e2-timer, or e2 (active heartbeat)")
 	duration := flag.Duration("duration", 10*time.Minute, "noise load duration")
 	interval := flag.Duration("interval", 5*time.Second, "observer interval")
 	settle := flag.Duration("settle", 5*time.Second, "settling time")
@@ -179,8 +238,8 @@ func run() error {
 	slot := flag.String("slot", lab.DefaultSlotName, "replication slot")
 	healthURL := flag.String("health-url", lab.DefaultHealthURL, "Debezium health URL")
 	flag.Parse()
-	if *scenario != "e1" && *scenario != "e2" {
-		return errors.New("set -scenario=e1 or -scenario=e2")
+	if *scenario != "e1" && *scenario != "e2-timer" && *scenario != "e2" {
+		return errors.New("set -scenario=e1, -scenario=e2-timer, or -scenario=e2")
 	}
 	if *duration <= 0 || *interval <= 0 || *settle < 0 {
 		return errors.New("duration and interval must be positive; settle must be nonnegative")
@@ -208,6 +267,14 @@ func run() error {
 	first, err := ready(ctx, db, *slot, *healthURL, client)
 	if err != nil {
 		return err
+	}
+	var pgVersion string
+	if err := db.QueryRowContext(ctx, `SELECT current_setting('server_version')`).Scan(&pgVersion); err != nil {
+		return fmt.Errorf("read PostgreSQL version: %w", err)
+	}
+	imageOutput, err := exec.CommandContext(ctx, "docker", "compose", "config", "--images").Output()
+	if err != nil {
+		return fmt.Errorf("read configured Compose images: %w", err)
 	}
 	startHB, err := heartbeatCount(ctx, db)
 	if err != nil {
@@ -289,7 +356,7 @@ loop:
 	if err != nil {
 		return err
 	}
-	report, err := summary(*scenario, samples, counts.Noise, loadTime, startHB, endHB, *rate, *duration, *interval, *settle)
+	report, err := summary(*scenario, samples, counts.Noise, loadTime, startHB, endHB, *rate, *noiseBytes, *duration, *interval, *settle, pgVersion, string(imageOutput))
 	if err != nil {
 		return err
 	}
