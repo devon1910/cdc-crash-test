@@ -129,8 +129,8 @@ func report(samples []observe.Observation, counts load.Counts, stopRequested, st
 			}
 		}
 	}
-	firstInactive := firstAfter(samples, stopRequested, func(s observe.Observation) bool { return !s.Active })
-	firstUnhealthy := firstAfter(samples, stopRequested, func(s observe.Observation) bool { return s.DebeziumHealth != "UP" })
+	firstInactive := firstAfter(samples, stopCompleted, func(s observe.Observation) bool { return !s.Active })
+	firstUnhealthy := firstAfter(samples, stopCompleted, func(s observe.Observation) bool { return s.DebeziumHealth != "UP" })
 	post := firstAfter(samples, stopCompleted, func(s observe.Observation) bool { return true })
 	var firstGrowth *observe.Observation
 	if post != nil {
@@ -174,10 +174,10 @@ func report(samples []observe.Observation, counts load.Counts, stopRequested, st
 			fmt.Fprintf(&b, "- %s: not observed.\n", label)
 			return
 		}
-		fmt.Fprintf(&b, "- %s: first sampled at %s UTC (%s after stop request); active=%t, health=`%s`, retained=%d bytes.\n", label, s.Timestamp.Format(time.RFC3339Nano), s.Timestamp.Sub(stopRequested).Round(time.Millisecond), s.Active, s.DebeziumHealth, s.RetainedWALBytes.Int64)
+		fmt.Fprintf(&b, "- %s: first sampled at %s UTC (%s after stop completed); active=%t, health=`%s`, retained=%d bytes.\n", label, s.Timestamp.Format(time.RFC3339Nano), s.Timestamp.Sub(stopCompleted).Round(time.Millisecond), s.Active, s.DebeziumHealth, s.RetainedWALBytes.Int64)
 	}
-	writeTransition("Inactive slot", firstInactive)
-	writeTransition("Health not UP", firstUnhealthy)
+	writeTransition("Inactive slot after completed stop", firstInactive)
+	writeTransition("Health not UP after completed stop", firstUnhealthy)
 	writeTransition("First completed-stop sample (growth baseline)", post)
 	writeTransition("Retained WAL above completed-stop baseline", firstGrowth)
 	if post != nil {
@@ -187,7 +187,7 @@ func report(samples []observe.Observation, counts load.Counts, stopRequested, st
 	}
 	fmt.Fprintf(&b, "- Retained-WAL distance: start %d, pre-stop %d, end %d, peak %d bytes; net growth rate after first completed-stop sample %.1f bytes/second.\n", first.RetainedWALBytes.Int64, pre.RetainedWALBytes.Int64, last.RetainedWALBytes.Int64, peak, growthRate)
 	fmt.Fprintf(&b, "- `pg_wal` directory size: start %d, end %d bytes. Final health: `%s`.\n", first.PGWALBytes, last.PGWALBytes, last.DebeziumHealth)
-	fmt.Fprintf(&b, "- Health samples before stop: UP %d, not UP %d; after stop request: UP %d, not UP %d.\n", healthBefore["UP"], healthBefore["not UP"], healthAfter["UP"], healthAfter["not UP"])
+	fmt.Fprintf(&b, "- Health samples before stop request: UP %d, not UP %d; from stop request through shutdown and stopped period: UP %d, not UP %d.\n", healthBefore["UP"], healthBefore["not UP"], healthAfter["UP"], healthAfter["not UP"])
 	fmt.Fprintln(&b)
 	if maxGap > 2*interval+2*time.Second || firstInactive == nil || firstUnhealthy == nil || firstGrowth == nil {
 		fmt.Fprintln(&b, "Verdict: incomplete or inconclusive. Inspect the CSV for sample gaps or missing transitions before claiming timing.")
