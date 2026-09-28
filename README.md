@@ -57,7 +57,7 @@ docker compose ps
 (Invoke-RestMethod http://localhost:8080/q/health).status
 ```
 
-Expect PostgreSQL and receiver healthy, Debezium running, and health `UP` except during E3's deliberately stopped interval. `docker compose logs receiver` shows delivered events. For deeper checks, see the [observer](docs/m2-observer.md), [E0](docs/m3-e0.md), [E1/E2](docs/m4-e1-e2.md), and [E3](docs/m5-e3.md) notes, plus the [ownership Q&A](docs/defend-it-questions-and-answers.md).
+Expect PostgreSQL and receiver healthy, Debezium running, and health `UP` except during E3's deliberately stopped interval. `docker compose logs receiver` shows delivered events. For deeper checks, see the [observer](docs/m2-observer.md), [E0](docs/m3-e0.md), [E1/E2](docs/m4-e1-e2.md), and [E3](docs/m5-e3.md) notes, plus the tracked [design decisions](docs/adr/).
 
 ## Experiments and what to expect
 
@@ -69,6 +69,19 @@ Expect PostgreSQL and receiver healthy, Debezium running, and health `UP` except
 | E3 connector stopped | `orders` and `noise` | Stopped halfway through | When do the slot become inactive, health fail, and WAL distance rise? |
 
 Each run writes `results/e0`, `results/e1`, `results/e2`, or `results/e3` followed by a UTC timestamp directory containing `observations.csv` and `summary.md`. Read each summary first, then inspect its CSV if a result is surprising. E0's pass rule is a **lab heuristic**, not a production safety threshold. E1 and E2 should be compared by changes during each run, not absolute starting LSNs; the connector is restarted between them. E3 reports sampled time bounds, not the exact instant each signal changed. The measured full-run [E1/E2 comparison](results/m4-comparison.md) and [E3 summary](results/e3/20260928T104944.136Z/summary.md) are examples, not guaranteed numbers for another machine.
+
+## Acceptance run and current status
+
+The v0.1 milestone sequence M0–M6 is complete. On 2026-09-28, the full default-duration E0 → E1 → E2 → E3 sequence ran from a clean local clone using the PowerShell/Go commands above. GNU Make was unavailable, so the documented equivalents were used. The clone had isolated Compose volumes and produced a new result set:
+
+| Run | Observed result in the acceptance run |
+| --- | --- |
+| E0 | Passed the baseline rule. `confirmed_flush_lsn` advanced; slot and health were good in 122/122 samples; peak retained-WAL distance was 541,272 bytes. |
+| E1 | 5,999 noise writes. Debezium stayed active and healthy in 121 samples, but `confirmed_flush_lsn` did not move; retained-WAL distance rose from 37,776 to 1,635,256 bytes. |
+| E2 | 5,999 noise writes and 59 heartbeat updates. Both slot LSNs advanced; retained-WAL distance ended at 375,960 bytes after falling from the E1 backlog. Its peak was 1,924,632 bytes, including that inherited starting backlog. |
+| E3 | 5,999 writes to each table. The slot became inactive and health failed 3.393 seconds after Docker confirmed the stop; retained-WAL growth above the completed-stop baseline was sampled 8.392 seconds after completion. Retained-WAL distance ended at 1,702,192 bytes. |
+
+The [acceptance record](docs/m6-acceptance.md) links all four summaries and CSVs and documents one inconclusive E3 attempt followed by a successful rerun. The runner now measures stopped-state transitions from Docker's stop-completion time. This completes the original v0.1 plan; using the lab against another team's CDC deployment would require a separate configurable-connector milestone.
 
 ## Reading `observations.csv`
 
@@ -97,4 +110,4 @@ Use `make down` (or `docker compose down`) to stop the lab while preserving volu
 
 ## Verification status
 
-On 2026-09-28, the documented default-duration E0 → E1 → E2 → E3 sequence completed from a fresh local clone using the PowerShell/Go commands above. E0 passed its baseline rule; E1, E2, and E3 generated complete observations and summaries; E3 restarted Debezium, whose health returned `UP`. The run artifacts and any test limitations are recorded in [M6 acceptance](docs/m6-acceptance.md). `go test ./...`, `go vet ./...`, `docker compose config --quiet`, and the short sequential smoke run also passed. GNU Make was unavailable, so its documented command equivalents were used.
+`go test ./...`, `go vet ./...`, and `docker compose config --quiet` pass. The acceptance sequence and the shorter wiring smoke run both completed; E3 restarted Debezium and its health returned `UP`. Your original Compose stack was restarted after the clean-clone acceptance run. The ownership Q&A is a local-only file and is intentionally excluded from Git.
