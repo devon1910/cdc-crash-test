@@ -1,0 +1,64 @@
+name: cdc-crashtest-disk-fill
+
+services:
+  postgres:
+    image: postgres:17.11-alpine3.24@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    command:
+      - postgres
+      - -c
+      - wal_level=logical
+      - -c
+      - max_wal_size=64MB
+      - -c
+      - max_slot_wal_keep_size=-1
+      - -c
+      - checkpoint_timeout=30s
+      - -c
+      - shared_buffers=32MB
+      - -c
+      - hba_file=/etc/postgresql/pg_hba.conf
+    environment:
+      POSTGRES_DB: cdc_lab
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "127.0.0.1:55434:5432"
+    volumes:
+      - ../../db/init:/docker-entrypoint-initdb.d:ro
+      - ../../db/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+    tmpfs:
+      - /var/lib/postgresql/data:size=268435456
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cdc_lab"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 5s
+
+  receiver:
+    build:
+      context: ../..
+      dockerfile: cmd/receiver/Dockerfile
+    ports:
+      - "127.0.0.1:18083:8081"
+    healthcheck:
+      test: ["CMD", "/receiver", "-healthcheck"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  debezium:
+    image: quay.io/debezium/server:3.6.3.Final@sha256:e1c8e29cbb0c44f3cd9b742222e7899520ed1c210906ba071e80dbb8b987d0bd
+    depends_on:
+      postgres:
+        condition: service_healthy
+      receiver:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:18082:8080"
+    volumes:
+      - ../../debezium/application.properties:/debezium/config/application.properties:ro
+      - debezium-data:/debezium/data
+
+volumes:
+  debezium-data:

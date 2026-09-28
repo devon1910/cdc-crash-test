@@ -1,0 +1,132 @@
+postgres-1  | ********************************************************************************
+postgres-1  | WARNING: POSTGRES_HOST_AUTH_METHOD has been set to "trust". This will allow
+postgres-1  |          anyone with access to the Postgres port to access your database without
+postgres-1  |          a password, even if POSTGRES_PASSWORD is set. See PostgreSQL
+postgres-1  |          documentation about "trust":
+postgres-1  |          https://www.postgresql.org/docs/current/auth-trust.html
+postgres-1  |          In Docker's default configuration, this is effectively any other
+postgres-1  |          container on the same system.
+postgres-1  | 
+postgres-1  |          It is not recommended to use POSTGRES_HOST_AUTH_METHOD=trust. Replace
+postgres-1  |          it with "-e POSTGRES_PASSWORD=password" instead to set a password in
+postgres-1  |          "docker run".
+postgres-1  | ********************************************************************************
+postgres-1  | The files belonging to this database system will be owned by user "postgres".
+postgres-1  | This user must also own the server process.
+postgres-1  | 
+postgres-1  | The database cluster will be initialized with locale "en_US.utf8".
+postgres-1  | The default database encoding has accordingly been set to "UTF8".
+postgres-1  | The default text search configuration will be set to "english".
+postgres-1  | 
+postgres-1  | Data page checksums are disabled.
+postgres-1  | 
+postgres-1  | fixing permissions on existing directory /var/lib/postgresql/data ... ok
+postgres-1  | creating subdirectories ... ok
+postgres-1  | selecting dynamic shared memory implementation ... posix
+postgres-1  | selecting default "max_connections" ... 100
+postgres-1  | selecting default "shared_buffers" ... 128MB
+postgres-1  | selecting default time zone ... UTC
+postgres-1  | creating configuration files ... ok
+postgres-1  | running bootstrap script ... ok
+postgres-1  | sh: locale: not found
+postgres-1  | 2026-09-28 20:57:03.798 UTC [37] WARNING:  no usable system locales were found
+postgres-1  | performing post-bootstrap initialization ... ok
+postgres-1  | syncing data to disk ... ok
+postgres-1  | 
+postgres-1  | initdb: warning: enabling "trust" authentication for local connections
+postgres-1  | 
+postgres-1  | initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+postgres-1  | Success. You can now start the database server using:
+postgres-1  | 
+postgres-1  |     pg_ctl -D /var/lib/postgresql/data -l logfile start
+postgres-1  | 
+postgres-1  | waiting for server to start....2026-09-28 20:57:04.406 UTC [43] LOG:  starting PostgreSQL 17.11 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+postgres-1  | 2026-09-28 20:57:04.414 UTC [43] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+postgres-1  | 2026-09-28 20:57:04.420 UTC [46] LOG:  database system was shut down at 2026-09-28 20:57:04 UTC
+postgres-1  | 2026-09-28 20:57:04.424 UTC [43] LOG:  database system is ready to accept connections
+postgres-1  |  done
+postgres-1  | server started
+postgres-1  | CREATE DATABASE
+postgres-1  | 
+postgres-1  | 
+postgres-1  | /usr/local/bin/docker-entrypoint.sh: running /docker-entrypoint-initdb.d/001-schema.sql
+postgres-1  | CREATE ROLE
+postgres-1  | CREATE TABLE
+postgres-1  | CREATE TABLE
+postgres-1  | CREATE TABLE
+postgres-1  | INSERT 0 1
+postgres-1  | GRANT
+postgres-1  | GRANT
+postgres-1  | GRANT
+postgres-1  | GRANT
+postgres-1  | CREATE PUBLICATION
+postgres-1  | 
+postgres-1  | 
+postgres-1  | waiting for server to shut down....2026-09-28 20:57:04.630 UTC [43] LOG:  received fast shutdown request
+postgres-1  | 2026-09-28 20:57:04.630 UTC [43] LOG:  aborting any active transactions
+postgres-1  | 2026-09-28 20:57:04.632 UTC [43] LOG:  background worker "logical replication launcher" (PID 49) exited with exit code 1
+postgres-1  | 2026-09-28 20:57:04.633 UTC [44] LOG:  shutting down
+postgres-1  | 2026-09-28 20:57:04.633 UTC [44] LOG:  checkpoint starting: shutdown immediate
+postgres-1  | 2026-09-28 20:57:04.641 UTC [44] LOG:  checkpoint complete: wrote 955 buffers (23.3%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.008 s, sync=0.001 s, total=0.009 s; sync files=318, longest=0.001 s, average=0.001 s; distance=4341 kB, estimate=4341 kB; lsn=0/1931398, redo lsn=0/1931398
+postgres-1  | 2026-09-28 20:57:04.648 UTC [43] LOG:  database system is shut down
+postgres-1  |  done
+postgres-1  | server stopped
+postgres-1  | 
+postgres-1  | PostgreSQL init process complete; ready for start up.
+postgres-1  | 
+postgres-1  | 2026-09-28 20:57:04.759 UTC [1] LOG:  starting PostgreSQL 17.11 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+postgres-1  | 2026-09-28 20:57:04.759 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+postgres-1  | 2026-09-28 20:57:04.759 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+postgres-1  | 2026-09-28 20:57:04.766 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+postgres-1  | 2026-09-28 20:57:04.773 UTC [61] LOG:  database system was shut down at 2026-09-28 20:57:04 UTC
+postgres-1  | 2026-09-28 20:57:04.776 UTC [1] LOG:  database system is ready to accept connections
+postgres-1  | 2026-09-28 20:57:13.777 UTC [113] LOG:  logical decoding found consistent point at 0/1931410
+postgres-1  | 2026-09-28 20:57:13.777 UTC [113] DETAIL:  There are no running transactions.
+postgres-1  | 2026-09-28 20:57:13.777 UTC [113] STATEMENT:  CREATE_REPLICATION_SLOT "cdc_crashtest_slot"  LOGICAL pgoutput 
+postgres-1  | 2026-09-28 20:57:13.777 UTC [113] LOG:  exported logical decoding snapshot: "00000071-00000004-1" with 0 transaction IDs
+postgres-1  | 2026-09-28 20:57:13.777 UTC [113] STATEMENT:  CREATE_REPLICATION_SLOT "cdc_crashtest_slot"  LOGICAL pgoutput 
+postgres-1  | 2026-09-28 20:57:14.266 UTC [113] LOG:  starting logical decoding for slot "cdc_crashtest_slot"
+postgres-1  | 2026-09-28 20:57:14.266 UTC [113] DETAIL:  Streaming transactions committing after 0/1931448, reading WAL from 0/1931410.
+postgres-1  | 2026-09-28 20:57:14.266 UTC [113] STATEMENT:  START_REPLICATION SLOT "cdc_crashtest_slot" LOGICAL 0/1931448 ("proto_version" '1', "publication_names" 'cdc_publication', "messages" 'true')
+postgres-1  | 2026-09-28 20:57:14.266 UTC [113] LOG:  logical decoding found consistent point at 0/1931410
+postgres-1  | 2026-09-28 20:57:14.266 UTC [113] DETAIL:  There are no running transactions.
+postgres-1  | 2026-09-28 20:57:14.266 UTC [113] STATEMENT:  START_REPLICATION SLOT "cdc_crashtest_slot" LOGICAL 0/1931448 ("proto_version" '1', "publication_names" 'cdc_publication', "messages" 'true')
+postgres-1  | 2026-09-28 20:57:19.813 UTC [59] LOG:  checkpoints are occurring too frequently (15 seconds apart)
+postgres-1  | 2026-09-28 20:57:19.813 UTC [59] HINT:  Consider increasing the configuration parameter "max_wal_size".
+postgres-1  | 2026-09-28 20:57:19.813 UTC [59] LOG:  checkpoint starting: wal
+postgres-1  | 2026-09-28 20:57:23.255 UTC [59] LOG:  checkpoint complete: wrote 29 buffers (0.7%); 1 WAL file(s) added, 0 removed, 0 recycled; write=3.433 s, sync=0.001 s, total=3.443 s; sync files=46, longest=0.001 s, average=0.001 s; distance=24146 kB, estimate=24146 kB; lsn=0/4FDC530, redo lsn=0/30C5D18
+postgres-1  | 2026-09-28 20:57:23.307 UTC [59] LOG:  checkpoints are occurring too frequently (4 seconds apart)
+postgres-1  | 2026-09-28 20:57:23.307 UTC [59] HINT:  Consider increasing the configuration parameter "max_wal_size".
+postgres-1  | 2026-09-28 20:57:23.307 UTC [59] LOG:  checkpoint starting: wal
+postgres-1  | 2026-09-28 20:57:26.167 UTC [59] LOG:  checkpoint complete: wrote 84 buffers (2.1%); 1 WAL file(s) added, 0 removed, 0 recycled; write=2.812 s, sync=0.001 s, total=2.861 s; sync files=22, longest=0.001 s, average=0.001 s; distance=33027 kB, estimate=33027 kB; lsn=0/6DE6DC8, redo lsn=0/5106CF0
+postgres-1  | 2026-09-28 20:57:26.881 UTC [59] LOG:  checkpoints are occurring too frequently (3 seconds apart)
+postgres-1  | 2026-09-28 20:57:26.881 UTC [59] HINT:  Consider increasing the configuration parameter "max_wal_size".
+postgres-1  | 2026-09-28 20:57:26.881 UTC [59] LOG:  checkpoint starting: wal
+postgres-1  | 2026-09-28 20:57:29.634 UTC [59] LOG:  checkpoint complete: wrote 33 buffers (0.8%); 1 WAL file(s) added, 0 removed, 0 recycled; write=2.723 s, sync=0.001 s, total=2.753 s; sync files=26, longest=0.001 s, average=0.001 s; distance=32803 kB, estimate=33005 kB; lsn=0/8F269A8, redo lsn=0/710F960
+postgres-1  | 2026-09-28 20:57:29.683 UTC [59] LOG:  checkpoints are occurring too frequently (3 seconds apart)
+postgres-1  | 2026-09-28 20:57:29.683 UTC [59] HINT:  Consider increasing the configuration parameter "max_wal_size".
+postgres-1  | 2026-09-28 20:57:29.683 UTC [59] LOG:  checkpoint starting: wal
+postgres-1  | 2026-09-28 20:57:33.119 UTC [59] LOG:  checkpoint complete: wrote 28 buffers (0.7%); 1 WAL file(s) added, 0 removed, 0 recycled; write=3.410 s, sync=0.001 s, total=3.436 s; sync files=28, longest=0.001 s, average=0.001 s; distance=32722 kB, estimate=32977 kB; lsn=0/AF54848, redo lsn=0/9104338
+postgres-1  | 2026-09-28 20:57:33.135 UTC [59] LOG:  checkpoints are occurring too frequently (4 seconds apart)
+postgres-1  | 2026-09-28 20:57:33.135 UTC [59] HINT:  Consider increasing the configuration parameter "max_wal_size".
+postgres-1  | 2026-09-28 20:57:33.135 UTC [59] LOG:  checkpoint starting: wal
+postgres-1  | 2026-09-28 20:57:36.492 UTC [59] LOG:  checkpoint complete: wrote 11 buffers (0.3%); 1 WAL file(s) added, 0 removed, 0 recycled; write=3.309 s, sync=0.001 s, total=3.358 s; sync files=27, longest=0.001 s, average=0.001 s; distance=32784 kB, estimate=32957 kB; lsn=0/CE6CDC8, redo lsn=0/B1083E8
+postgres-1  | 2026-09-28 20:57:36.541 UTC [59] LOG:  checkpoints are occurring too frequently (3 seconds apart)
+postgres-1  | 2026-09-28 20:57:36.541 UTC [59] HINT:  Consider increasing the configuration parameter "max_wal_size".
+postgres-1  | 2026-09-28 20:57:36.541 UTC [59] LOG:  checkpoint starting: wal
+postgres-1  | 2026-09-28 20:57:38.347 UTC [329] PANIC:  could not write to file "pg_wal/xlogtemp.329": No space left on device
+postgres-1  | 2026-09-28 20:57:38.347 UTC [329] STATEMENT:  INSERT INTO public.noise (payload) VALUES ($1)
+postgres-1  | 2026-09-28 20:57:38.350 UTC [1] LOG:  server process (PID 329) was terminated by signal 6: Aborted
+postgres-1  | 2026-09-28 20:57:38.350 UTC [1] DETAIL:  Failed process was running: INSERT INTO public.noise (payload) VALUES ($1)
+postgres-1  | 2026-09-28 20:57:38.350 UTC [1] LOG:  terminating any other active server processes
+postgres-1  | 2026-09-28 20:57:38.352 UTC [1] LOG:  all server processes terminated; reinitializing
+postgres-1  | 2026-09-28 20:57:38.370 UTC [336] LOG:  database system was interrupted; last known up at 2026-09-28 20:57:36 UTC
+postgres-1  | 2026-09-28 20:57:38.371 UTC [339] LOG:  PID 329 in cancel request did not match any process
+postgres-1  | 2026-09-28 20:57:38.384 UTC [336] LOG:  database system was not properly shut down; automatic recovery in progress
+postgres-1  | 2026-09-28 20:57:38.388 UTC [336] LOG:  redo starts at 0/B1083E8
+postgres-1  | 2026-09-28 20:57:38.490 UTC [336] LOG:  redo done at 0/DFFF800 system usage: CPU: user: 0.05 s, system: 0.04 s, elapsed: 0.10 s
+postgres-1  | 2026-09-28 20:57:38.498 UTC [336] FATAL:  could not write to file "pg_wal/xlogtemp.336": No space left on device
+postgres-1  | 2026-09-28 20:57:38.500 UTC [1] LOG:  startup process (PID 336) exited with exit code 1
+postgres-1  | 2026-09-28 20:57:38.500 UTC [1] LOG:  terminating any other active server processes
+postgres-1  | 2026-09-28 20:57:38.501 UTC [1] LOG:  shutting down due to startup process failure
+postgres-1  | 2026-09-28 20:57:38.502 UTC [1] LOG:  database system is shut down

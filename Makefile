@@ -1,4 +1,4 @@
-.PHONY: up down reset logs ps e0 e1 e2 e2-timer m4-comparison e3
+.PHONY: up down reset logs ps e0 e1 e2 e2-timer m4-comparison e3 disk-fill
 
 up:
 	docker compose up --build -d
@@ -33,3 +33,6 @@ m4-comparison:
 
 e3:
 	go run ./cmd/e3 $(E3_ARGS)
+
+disk-fill:
+	go run ./cmd/diskfill

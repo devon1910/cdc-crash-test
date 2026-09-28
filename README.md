@@ -16,6 +16,8 @@ In the clean 10-minute comparison, `heartbeat.interval.ms` alone did not advance
 
 The action-query result is evidence for this setup, not a production guarantee; it does not prove every event reached a durable sink. The [full comparison and CSVs](results/m4-comparison.md) contain the configuration and measurements. A separate [repeatability check](results/m4-stability-repeat.md) reproduced the same outcome in all three cases.
 
+The bounded disk-fill run also reproduced the incident mechanism: after Debezium was stopped, the inactive slot's confirmed flush LSN stayed fixed while retained WAL grew. On the 24th write batch PostgreSQL returned SQLSTATE `53100` (`No space left on device`) while writing WAL, then failed recovery on the full filesystem. This happened inside a 256 MiB tmpfs, which the runner destroyed during cleanup. See the [run summary](results/disk-fill/20260928T205700Z/summary.md), [observations CSV](results/disk-fill/20260928T205700Z/observations.csv), and [PostgreSQL log](results/disk-fill/20260928T205700Z/postgres.log).
+
 ## How the lab works
 
 ```text
@@ -42,6 +44,8 @@ The comparison asks for confirmation, then deletes this Compose project's Postgr
 
 The comparison takes about 30 minutes at its default settings. On Windows without Make, run it with `go run ./cmd/m4comparison`. The same Go command works on macOS and Linux; `make m4-comparison` delegates to it on all supported platforms.
 
+To demonstrate the disk-full failure mode, run `make disk-fill` (or `go run ./cmd/diskfill`). This starts Debezium, stops it while leaving its replication slot behind, then writes and clears batches in the unpublished table until PostgreSQL runs out of space. PostgreSQL's data directory is a dedicated **256 MiB tmpfs**; the runner verifies this cap before generating load, and asks you to type `YES`. It does not fill a host filesystem or reuse the main lab's volumes. Cleanup destroys the temporary filesystem and connector-offset volume. The CSV, summary, and PostgreSQL log remain under `results/disk-fill/`.
+
 Other experiments are available individually:
 
 - `make e0` (or `go run ./cmd/e0`): published application writes as a progressing baseline.
@@ -62,4 +66,4 @@ An LSN (Log Sequence Number) is a position in PostgreSQL's write-ahead log. `con
 
 ## Scope and history
 
-The measured heartbeat runs use one local PostgreSQL 17.11 instance, Debezium Server 3.6.3.Final, small write rates, and a non-durable HTTP receiver. They do not establish safety for managed databases, failover, other CDC tools, or production-scale incidents. Historical full-stack acceptance results—including the earlier sequential run where the active-heartbeat case inherited a backlog—are in [experiment history](docs/experiment-history.md). For design tradeoffs, see the [architecture decisions](docs/adr/).
+The experiments use local PostgreSQL 17.11, Debezium Server 3.6.3.Final, and a non-durable HTTP receiver. They do not establish safety for managed databases, failover, other CDC tools, or production-scale incidents. Historical full-stack acceptance results—including the earlier sequential run where the active-heartbeat case inherited a backlog—are in [experiment history](docs/experiment-history.md). For design tradeoffs, see the [architecture decisions](docs/adr/).
