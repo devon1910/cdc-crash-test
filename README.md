@@ -2,7 +2,7 @@
 
 ![Retained-WAL distance over time for no heartbeat, timer-only, and published-table action-query runs; Debezium health was UP throughout.](docs/heartbeat-comparison.svg)
 
-An earlier production incident filled a host disk after an inactive Debezium replication slot retained PostgreSQL WAL. This lab measures that quiet-source failure mode at a small, controlled scale and compares heartbeat configurations.
+An earlier production incident filled a host disk after a Debezium replication slot stopped advancing and retained PostgreSQL WAL. Multiple Debezium instances competed for the slot. This single-connector lab reproduces the stalled-slot consequences, not that competition or the missed alert; it measures the quiet-source failure mode at a small, controlled scale and compares heartbeat configurations.
 
 ## Finding
 
@@ -16,7 +16,14 @@ In the clean 10-minute comparison, `heartbeat.interval.ms` alone did not advance
 
 The action-query result is evidence for this setup, not a production guarantee; it does not prove every event reached a durable sink. The [full comparison and CSVs](results/m4-comparison.md) contain the configuration and measurements. A separate [repeatability check](results/m4-stability-repeat.md) reproduced the same outcome in all three cases.
 
-The bounded disk-fill run also reproduced the incident mechanism: after Debezium was stopped, the inactive slot's confirmed flush LSN stayed fixed while retained WAL grew. On the 24th write batch PostgreSQL returned SQLSTATE `53100` (`No space left on device`) while writing WAL, then failed recovery on the full filesystem. This happened inside a 256 MiB tmpfs, which the runner destroyed during cleanup. See the [run summary](results/disk-fill/20260928T205700Z/summary.md), [observations CSV](results/disk-fill/20260928T205700Z/observations.csv), and [PostgreSQL log](results/disk-fill/20260928T205700Z/postgres.log).
+Debezium's [PostgreSQL documentation](https://debezium.io/documentation/reference/3.6/connectors/postgresql.html) describes heartbeat configuration for low-change workloads; in this setup, the timer alone did not advance the slot. In the paired 256 MiB disk-fill test, the no-heartbeat case filled the bounded filesystem after 23 completed batches: `confirmed_flush_lsn` stayed fixed and retained WAL reached 207,208,008 bytes, while Debezium health stayed UP in every sample before PostgreSQL crashed. With the published-table action query, all 30 batches completed; the heartbeat row's update count went from 1 to 34, `confirmed_flush_lsn` and `restart_lsn` advanced, and retained WAL peaked at 99,140,864 bytes. Peak data-directory usage was 182,669,312 of 268,435,456 bytes (about 68%), with 136,081,408 bytes free at the end. See the [no-heartbeat summary](results/disk-fill/20260928T214209Z-no-heartbeat/summary.md) and [action-query summary](results/disk-fill/20260928T214702Z-action-query/summary.md); each links its CSV and PostgreSQL log. The earlier stopped-connector runs are kept as historical experiments in [experiment history](docs/experiment-history.md), not as the incident reproduction.
+
+## What to do
+
+- Use `heartbeat.action.query` to update a table in the connector's publication; don't rely on the timer alone.
+- Measure retained WAL per slot from `restart_lsn` in `pg_replication_slots` (for example, `pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn)`) and alert on it, not Debezium health alone.
+- Consider `max_slot_wal_keep_size` as a last line of defense, understanding that it trades CDC completeness for database survival.
+- Make sure disk alerts reach a person who can act on them.
 
 ## How the lab works
 
@@ -37,21 +44,21 @@ Start the stack and run the heartbeat comparison:
 
 ```sh
 make up
-make m4-comparison
+make heartbeat-comparison
 ```
 
 The comparison asks for confirmation, then deletes this Compose project's PostgreSQL and Debezium volumes before each of the three scenarios so none inherits another's slot backlog. This permanently removes the database, replication slot, and connector offsets in those volumes. It leaves files under `results/` intact and stops the containers when finished. Type anything other than `YES` to cancel without resetting volumes.
 
-The comparison takes about 30 minutes at its default settings. On Windows without Make, run it with `go run ./cmd/m4comparison`. The same Go command works on macOS and Linux; `make m4-comparison` delegates to it on all supported platforms.
+The comparison takes about 30 minutes at its default settings. On Windows without Make, run it with `go run ./cmd/heartbeatcomparison`. The same Go command works on macOS and Linux; `make heartbeat-comparison` delegates to it on all supported platforms. The old `make m4-comparison` target remains as an alias.
 
-To demonstrate the disk-full failure mode, run `make disk-fill` (or `go run ./cmd/diskfill`). This starts Debezium, stops it while leaving its replication slot behind, then writes and clears batches in the unpublished table until PostgreSQL runs out of space. PostgreSQL's data directory is a dedicated **256 MiB tmpfs**; the runner verifies this cap before generating load, and asks you to type `YES`. It does not fill a host filesystem or reuse the main lab's volumes. Cleanup destroys the temporary filesystem and connector-offset volume. The CSV, summary, and PostgreSQL log remain under `results/disk-fill/`.
+To run the paired disk-fill experiment, use `make disk-fill`. It runs the no-heartbeat case followed by the action-query case, each with a fresh isolated stack and the same 30-batch budget, 8 MiB per batch, and 10-second pacing. Debezium remains running in both. Each run asks you to type `YES`; PostgreSQL's data directory is a dedicated **256 MiB tmpfs**, whose cap is verified before load starts. It does not fill a host filesystem or reuse the main lab's volumes. Cleanup destroys the temporary filesystem and connector-offset volume; the CSV, summary, and PostgreSQL log remain under `results/disk-fill/`. To run one case directly, use `go run ./cmd/diskfill -scenario=no-heartbeat` or `-scenario=action-query`.
 
 Other experiments are available individually:
 
 - `make e0` (or `go run ./cmd/e0`): published application writes as a progressing baseline.
-- `make e1` (or `go run ./cmd/m4 -scenario=e1`): noise-only writes, no heartbeat.
-- `make e2-timer` (or `go run ./cmd/m4 -scenario=e2-timer`): timer-only heartbeat.
-- `make e2` (or `go run ./cmd/m4 -scenario=e2`): heartbeat action query updates the published table.
+- `make e1` (or `go run ./cmd/heartbeat -scenario=e1`): noise-only writes, no heartbeat.
+- `make e2-timer` (or `go run ./cmd/heartbeat -scenario=e2-timer`): timer-only heartbeat.
+- `make e2` (or `go run ./cmd/heartbeat -scenario=e2`): heartbeat action query updates the published table.
 - `make e3` (or `go run ./cmd/e3`): stop Debezium during writes, observe slot and health, then restart it.
 
 Each experiment runs for ten minutes by default and saves a timestamped `observations.csv` and `summary.md` below `results/`. For a wiring check, pass `-duration=90s`; a short run is not a full experiment verdict. Individual scenarios preserve the current database and offsets, so use the reset comparison command for a fair side-by-side heartbeat test.

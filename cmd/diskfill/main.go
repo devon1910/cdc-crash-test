@@ -28,6 +28,7 @@ import (
 
 const (
 	composeFile    = "experiments/disk-fill/compose.yaml"
+	actionCompose  = "experiments/disk-fill/compose-action.yaml"
 	serviceName    = "postgres"
 	dataDirectory  = "/var/lib/postgresql/data"
 	tmpfsSizeBytes = int64(268435456)
@@ -36,12 +37,15 @@ const (
 	slotName       = "cdc_crashtest_slot"
 )
 
+var actionQuery bool
+
 type observation struct {
 	timestamp          time.Time
 	batch              int
 	slotActive         sql.NullBool
 	restartLSN         sql.NullString
 	confirmedFlushLSN  sql.NullString
+	heartbeatUpdates   sql.NullInt64
 	retainedWALBytes   sql.NullInt64
 	pgWALBytes         sql.NullInt64
 	pgdataUsedBytes    int64
@@ -67,7 +71,7 @@ func openCSV(path string) (*csvOutput, error) {
 		return nil, err
 	}
 	writer := csv.NewWriter(file)
-	header := []string{"timestamp", "batch", "slot_active", "restart_lsn", "confirmed_flush_lsn", "retained_wal_bytes", "pg_wal_bytes", "pgdata_used_bytes", "pgdata_available_bytes", "pgdata_capacity_bytes", "postgres_state", "debezium_health", "workload_status", "postgres_query_error"}
+	header := []string{"timestamp", "batch", "slot_active", "restart_lsn", "confirmed_flush_lsn", "heartbeat_update_count", "retained_wal_bytes", "pg_wal_bytes", "pgdata_used_bytes", "pgdata_available_bytes", "pgdata_capacity_bytes", "postgres_state", "debezium_health", "workload_status", "postgres_query_error"}
 	if err := writer.Write(header); err != nil {
 		file.Close()
 		return nil, err
@@ -84,7 +88,7 @@ func (o *csvOutput) write(s observation) error {
 	row := []string{
 		s.timestamp.UTC().Format(time.RFC3339Nano), strconv.Itoa(s.batch),
 		nullBool(s.slotActive), nullString(s.restartLSN), nullString(s.confirmedFlushLSN),
-		nullInt(s.retainedWALBytes), nullInt(s.pgWALBytes), strconv.FormatInt(s.pgdataUsedBytes, 10),
+		nullInt(s.heartbeatUpdates), nullInt(s.retainedWALBytes), nullInt(s.pgWALBytes), strconv.FormatInt(s.pgdataUsedBytes, 10),
 		strconv.FormatInt(s.pgdataAvailable, 10), strconv.FormatInt(s.pgdataCapacity, 10),
 		s.postgresState, s.debeziumHealth, s.workloadStatus, s.postgresQueryError,
 	}
@@ -122,7 +126,8 @@ func nullInt(v sql.NullInt64) string {
 }
 
 func confirm(in io.Reader, out io.Writer) bool {
-	fmt.Fprintln(out, "This experiment stops Debezium and fills PostgreSQL's isolated 256 MiB tmpfs data directory.")
+	fmt.Fprintln(out, "This experiment runs Debezium against PostgreSQL in an isolated 256 MiB tmpfs data directory.")
+	fmt.Fprintln(out, "The no-heartbeat case is expected to fill it; the action-query case uses the same batch budget.")
 	fmt.Fprintln(out, "It does not write to a host data volume. Cleanup destroys the capped tmpfs and the temporary connector-offset volume.")
 	fmt.Fprint(out, "Type YES to continue: ")
 	scanner := bufio.NewScanner(in)
@@ -130,7 +135,11 @@ func confirm(in io.Reader, out io.Writer) bool {
 }
 
 func composeArgs(args ...string) []string {
-	return append([]string{"compose", "-f", composeFile}, args...)
+	base := []string{"compose", "-f", composeFile}
+	if actionQuery {
+		base = append(base, "-f", actionCompose)
+	}
+	return append(base, args...)
 }
 
 func runCommand(ctx context.Context, name string, args ...string) error {
@@ -272,12 +281,12 @@ func record(ctx context.Context, db *sql.DB, id string, client *http.Client, bat
 		sample.postgresQueryError = queryErr.Error()
 	} else {
 		sample.slotActive, sample.restartLSN, sample.confirmedFlushLSN, sample.retainedWALBytes, sample.pgWALBytes = active, restart, confirmed, retained, pgwal
+		var updates int64
+		if err := db.QueryRowContext(ctx, `SELECT update_count FROM public.cdc_heartbeat WHERE id=1`).Scan(&updates); err == nil {
+			sample.heartbeatUpdates = sql.NullInt64{Int64: updates, Valid: true}
+		}
 	}
 	return sample
-}
-
-func stopDebezium(ctx context.Context) error {
-	return runCommand(ctx, "docker", composeArgs("stop", "debezium")...)
 }
 
 func waitFor(ctx context.Context, check func(context.Context) (bool, error)) error {
@@ -347,21 +356,27 @@ func isDiskFull(err error) bool {
 	return strings.Contains(strings.ToLower(err.Error()), "no space left on device")
 }
 
-func writeSummary(path, postgresVersion string, initial, lastMeasured, terminalObservation observation, batches, rows int, terminal string, allInactive, diskFull bool) error {
+func writeSummary(path, scenario, postgresVersion string, initial, lastMeasured, terminalObservation observation, batches, rows, maxBatches int, peakRetainedWAL, peakFilesystemUsed int64, terminal string, healthySamples, diskFull bool) error {
 	var b strings.Builder
-	fmt.Fprintln(&b, "# Bounded disk-fill experiment")
+	fmt.Fprintf(&b, "# Bounded disk-fill experiment: %s\n", scenario)
 	fmt.Fprintln(&b)
-	fmt.Fprintln(&b, "This run started Debezium, then stopped the connector while leaving its logical replication slot behind. The workload wrote only to the unpublished `public.noise` table. PostgreSQL's data directory was a dedicated 256 MiB tmpfs; no host directory was used for database files.")
+	fmt.Fprintf(&b, "Debezium remained running throughout the workload. The workload wrote only to unpublished `public.noise`; PostgreSQL used a dedicated 256 MiB tmpfs, not a host data directory. Scenario: **%s**.\n", scenario)
 	fmt.Fprintln(&b)
 	fmt.Fprintf(&b, "- PostgreSQL: %s. Debezium Server: 3.6.3.Final.\n", postgresVersion)
-	fmt.Fprintf(&b, "- Workload batches: %d completed batches, each %d rows of 1 MiB text, followed by `TRUNCATE` so the table could reuse its space.\n", batches, rows)
-	health := "`" + initial.debeziumHealth + "`"
-	if strings.HasPrefix(initial.debeziumHealth, "DOWN:") {
-		health = "`DOWN` (expected; the connector was stopped)"
+	fmt.Fprintf(&b, "- Workload: %d completed batches out of a %d-batch budget, each %d rows of 1 MiB text, followed by `TRUNCATE`.\n", batches, maxBatches, rows)
+	healthWindow := "UP in every sample before PostgreSQL crashed"
+	if scenario == "action-query" {
+		healthWindow = "UP in every sample"
 	}
-	fmt.Fprintf(&b, "- Consumer state: Debezium stopped; slot remained inactive in all slot samples: %t; health after stop: %s.\n", allInactive, health)
-	fmt.Fprintf(&b, "- Confirmed flush LSN: `%s` at start to `%s` at the last successful sample; restart LSN: `%s` to `%s`.\n", nullString(initial.confirmedFlushLSN), nullString(lastMeasured.confirmedFlushLSN), nullString(initial.restartLSN), nullString(lastMeasured.restartLSN))
+	fmt.Fprintf(&b, "- Debezium health was `%s` at start; health was UP and the slot active in every sample %s: %t.\n", initial.debeziumHealth, strings.TrimPrefix(healthWindow, "UP in "), healthySamples)
+	if scenario == "no-heartbeat" {
+		fmt.Fprintf(&b, "- Heartbeat: disabled (`heartbeat.interval.ms=0`); confirmed flush LSN: `%s` at start to `%s` at last successful sample.\n", nullString(initial.confirmedFlushLSN), nullString(lastMeasured.confirmedFlushLSN))
+	} else {
+		fmt.Fprintf(&b, "- Heartbeat: 10-second interval plus action query on published `public.cdc_heartbeat`; update count: %s to %s; confirmed flush LSN: `%s` at start to `%s` at last successful sample.\n", nullInt(initial.heartbeatUpdates), nullInt(lastMeasured.heartbeatUpdates), nullString(initial.confirmedFlushLSN), nullString(lastMeasured.confirmedFlushLSN))
+	}
+	fmt.Fprintf(&b, "- Restart LSN: `%s` to `%s`.\n", nullString(initial.restartLSN), nullString(lastMeasured.restartLSN))
 	fmt.Fprintf(&b, "- Retained-WAL distance: %s at start to %s bytes at the last successful sample. `pg_wal` allocated size: %s to %s bytes.\n", nullInt(initial.retainedWALBytes), nullInt(lastMeasured.retainedWALBytes), nullInt(initial.pgWALBytes), nullInt(lastMeasured.pgWALBytes))
+	fmt.Fprintf(&b, "- Peak retained-WAL distance: %d bytes. Peak PostgreSQL data filesystem usage: %d / %d bytes.\n", peakRetainedWAL, peakFilesystemUsed, initial.pgdataCapacity)
 	fmt.Fprintf(&b, "- PostgreSQL data filesystem: %d / %d bytes used at start; last successful sample %d / %d bytes used with %d bytes available.\n", initial.pgdataUsedBytes, initial.pgdataCapacity, lastMeasured.pgdataUsedBytes, lastMeasured.pgdataCapacity, lastMeasured.pgdataAvailable)
 	fmt.Fprintf(&b, "- Terminal write result: %s. Container state at the final metrics probe: `%s`. See the [PostgreSQL log](postgres.log).\n", terminal, terminalObservation.postgresState)
 	if terminalObservation.postgresQueryError != "" {
@@ -369,21 +384,26 @@ func writeSummary(path, postgresVersion string, initial, lastMeasured, terminalO
 	}
 	fmt.Fprintln(&b)
 	fmt.Fprintln(&b, "## Verdict")
-	if diskFull {
-		fmt.Fprintln(&b, "The bounded filesystem reached a PostgreSQL disk-full write failure while the inactive slot's confirmed flush position remained behind current WAL. This demonstrates the failure mechanism without filling the host filesystem. The database filesystem and connector-offset volume were destroyed during cleanup.")
+	if scenario == "no-heartbeat" && diskFull {
+		fmt.Fprintf(&b, "PostgreSQL ran out of space after %d batches. Debezium health was UP in every sample until PostgreSQL crashed. The confirmed flush position stopped advancing while retained WAL grew. The bounded tmpfs and connector-offset volume were destroyed during cleanup.\n", batches)
+	} else if scenario == "action-query" && !diskFull {
+		fmt.Fprintf(&b, "PostgreSQL did not run out of space within the same %d-batch budget. The heartbeat action query advanced the slot while WAL remained bounded. The bounded tmpfs and connector-offset volume were destroyed during cleanup.\n", maxBatches)
 	} else {
-		fmt.Fprintln(&b, "Inconclusive: the workload stopped before PostgreSQL reported disk full. Inspect the CSV and PostgreSQL log, then rerun only if the tmpfs limit and isolation checks passed.")
+		fmt.Fprintln(&b, "Unexpected outcome for this scenario. Inspect the CSV and PostgreSQL log; do not interpret it as the expected comparison result.")
 	}
 	return os.WriteFile(path, []byte(b.String()), 0o644)
 }
 
 func run() (returnErr error) {
 	rows := flag.Int("rows-per-batch", 8, "random 1 MiB rows committed per batch")
-	maxBatches := flag.Int("max-batches", 100, "safety limit for committed batches")
+	maxBatches := flag.Int("max-batches", 30, "same workload budget for both heartbeat scenarios")
+	batchInterval := flag.Duration("batch-interval", 10*time.Second, "pause after each successful batch so checkpoints and heartbeats can run")
+	scenario := flag.String("scenario", "no-heartbeat", "scenario: no-heartbeat or action-query")
 	flag.Parse()
-	if *rows <= 0 || *maxBatches <= 0 {
-		return errors.New("rows-per-batch and max-batches must be positive")
+	if *rows <= 0 || *maxBatches <= 0 || *batchInterval < 0 || (*scenario != "no-heartbeat" && *scenario != "action-query") {
+		return errors.New("rows-per-batch and max-batches must be positive, batch-interval cannot be negative, and scenario must be no-heartbeat or action-query")
 	}
+	actionQuery = *scenario == "action-query"
 	if !confirm(os.Stdin, os.Stdout) {
 		fmt.Println("Cancelled; the disk-fill stack was not started.")
 		return nil
@@ -403,7 +423,7 @@ func run() (returnErr error) {
 		}
 	}()
 
-	stamp := time.Now().UTC().Format("20060102T150405Z")
+	stamp := time.Now().UTC().Format("20060102T150405Z") + "-" + *scenario
 	runDir := filepath.Join("results", "disk-fill", stamp)
 	if err := os.MkdirAll(runDir, 0o755); err != nil {
 		return err
@@ -468,21 +488,18 @@ func run() (returnErr error) {
 		return fmt.Errorf("Debezium did not become ready: %w", err)
 	}
 
-	if err := runCommand(ctx, "docker", composeArgs("stop", "debezium")...); err != nil {
-		return err
-	}
 	if err := waitFor(ctx, func(checkCtx context.Context) (bool, error) {
 		var active bool
 		if err := db.QueryRowContext(checkCtx, `SELECT active FROM pg_replication_slots WHERE slot_name=$1`, slotName).Scan(&active); err != nil {
 			return false, err
 		}
-		return !active, nil
+		return active, nil
 	}); err != nil {
-		return fmt.Errorf("replication slot did not become inactive: %w", err)
+		return fmt.Errorf("replication slot did not remain active: %w", err)
 	}
 
 	client := &http.Client{Timeout: 2 * time.Second}
-	initial := record(ctx, db, id, client, 0, "Debezium stopped; waiting for first batch")
+	initial := record(ctx, db, id, client, 0, "Debezium running; waiting for first batch")
 	if err := output.write(initial); err != nil {
 		return err
 	}
@@ -498,7 +515,9 @@ func run() (returnErr error) {
 	lastMeasured := initial
 	terminal := "batch limit reached before disk-full failure"
 	diskFull := false
-	allInactive := initial.slotActive.Valid && !initial.slotActive.Bool
+	healthySamples := initial.debeziumHealth == "UP" && initial.slotActive.Valid && initial.slotActive.Bool
+	peakRetainedWAL := initial.retainedWALBytes.Int64
+	peakFilesystemUsed := initial.pgdataUsedBytes
 	batches := 0
 	for batch := 1; batch <= *maxBatches; batch++ {
 		batchCtx, batchCancel := context.WithTimeout(ctx, 90*time.Second)
@@ -509,8 +528,14 @@ func run() (returnErr error) {
 		if final.retainedWALBytes.Valid && final.pgWALBytes.Valid && final.pgdataCapacity > 0 {
 			lastMeasured = final
 		}
-		if final.slotActive.Valid && final.slotActive.Bool {
-			allInactive = false
+		if final.retainedWALBytes.Valid && final.retainedWALBytes.Int64 > peakRetainedWAL {
+			peakRetainedWAL = final.retainedWALBytes.Int64
+		}
+		if final.pgdataCapacity > 0 && final.pgdataUsedBytes > peakFilesystemUsed {
+			peakFilesystemUsed = final.pgdataUsedBytes
+		}
+		if writeErr == nil && (final.debeziumHealth != "UP" || !final.slotActive.Valid || !final.slotActive.Bool) {
+			healthySamples = false
 		}
 		if err := output.write(final); err != nil {
 			return err
@@ -535,6 +560,15 @@ func run() (returnErr error) {
 		if batch == *maxBatches {
 			terminal = "safety batch limit reached"
 		}
+		if writeErr == nil && batch < *maxBatches && *batchInterval > 0 {
+			timer := time.NewTimer(*batchInterval)
+			select {
+			case <-ctx.Done():
+				timer.Stop()
+				return ctx.Err()
+			case <-timer.C:
+			}
+		}
 	}
 
 	logCtx, logCancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -549,12 +583,15 @@ func run() (returnErr error) {
 			terminal = "PostgreSQL logged `No space left on device` and stopped during checkpoint/recovery; the client received " + terminal
 		}
 	}
-	if err := writeSummary(filepath.Join(runDir, "summary.md"), postgresVersion, initial, lastMeasured, final, batches, *rows, terminal, allInactive, diskFull); err != nil {
+	if err := writeSummary(filepath.Join(runDir, "summary.md"), *scenario, postgresVersion, initial, lastMeasured, final, batches, *rows, *maxBatches, peakRetainedWAL, peakFilesystemUsed, terminal, healthySamples, diskFull); err != nil {
 		return err
 	}
 	fmt.Fprintf(os.Stdout, "disk-fill results: %s\n", runDir)
-	if !diskFull {
-		return errors.New("experiment ended without observing a disk-full failure; see summary and PostgreSQL log")
+	if *scenario == "no-heartbeat" && !diskFull {
+		return errors.New("no-heartbeat scenario ended without observing disk full; see summary and PostgreSQL log")
+	}
+	if *scenario == "action-query" && diskFull {
+		return errors.New("action-query scenario filled the bounded filesystem; see summary and PostgreSQL log")
 	}
 	return nil
 }

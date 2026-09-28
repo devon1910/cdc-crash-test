@@ -62,7 +62,7 @@ func run() (returnErr error) {
 		if err := command(ctx, "docker", "compose", "up", "--build", "-d"); err != nil {
 			return fmt.Errorf("start stack for %s: %w", scenario, err)
 		}
-		if err := command(ctx, "go", "run", "./cmd/m4", "-scenario="+scenario); err != nil {
+		if err := command(ctx, "go", "run", "./cmd/heartbeat", "-scenario="+scenario); err != nil {
 			return fmt.Errorf("run %s: %w", scenario, err)
 		}
 	}

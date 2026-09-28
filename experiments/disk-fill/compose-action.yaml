@@ -1,0 +1,4 @@
+services:
+  debezium:
+    volumes:
+      - ../../debezium/application-e2.properties:/debezium/config/application.properties:ro
