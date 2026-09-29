@@ -1,12 +1,20 @@
 # CDC crash test
 
-![Paired disk-fill runs comparing retained WAL and PostgreSQL tmpfs usage: without a heartbeat the filesystem fills while Debezium remains healthy; the published-table action-query heartbeat keeps WAL and disk use below the cap.](docs/disk-fill-comparison.svg)
+![Paired disk-fill runs comparing retained WAL and PostgreSQL tmpfs usage: without a heartbeat the filesystem fills while Debezium remains healthy; with the published-table action query, all 30 batches finish below the cap.](docs/disk-fill-comparison.svg)
 
 An earlier production incident filled a host disk after a Debezium replication slot stopped advancing and retained PostgreSQL WAL. Multiple Debezium instances competed for the slot. This single-connector lab reproduces the stalled-slot consequences, not that competition or the missed alert; it measures the quiet-source failure mode at a small, controlled scale and compares heartbeat configurations.
 
 ## Finding
 
-In the clean 10-minute comparison, `heartbeat.interval.ms` alone did not advance the slot. Updating a published heartbeat table did. Debezium stayed healthy and the slot active throughout all three runs.
+Without a heartbeat, PostgreSQL filled the 256 MiB test filesystem on batch 24, after 23 completed batches, while Debezium health stayed UP. The final sample began about 84 ms after PostgreSQL logged the disk-full `PANIC`: health still read UP while its SQL metrics query failed.
+
+With the published-table heartbeat action query, all 30 batches completed and the slot advanced. Peak filesystem use was 68%, but retained-WAL distance still peaked at 99,140,864 bytes. In this run the heartbeat limited slot lag; it did not eliminate WAL retention. Faster writes or a longer heartbeat interval can raise that peak, so the retained-WAL alert below still matters.
+
+The [no-heartbeat summary](results/disk-fill/20260928T214209Z-no-heartbeat/summary.md) and [action-query summary](results/disk-fill/20260928T214702Z-action-query/summary.md) link the CSVs and PostgreSQL logs. The earlier stopped-connector runs are in [experiment history](docs/experiment-history.md).
+
+### Heartbeat comparison
+
+Debezium's [PostgreSQL documentation](https://debezium.io/documentation/reference/3.6/connectors/postgresql.html) describes heartbeat settings for low-change workloads. In three independently reset 10-minute runs, `heartbeat.interval.ms` alone did not advance the slot; updating a published heartbeat table did. Debezium health was UP and the slot active throughout all three runs.
 
 | Heartbeat configuration | Confirmed flush LSN | Retained-WAL distance change | Peak distance |
 | --- | --- | ---: | ---: |
@@ -15,8 +23,6 @@ In the clean 10-minute comparison, `heartbeat.interval.ms` alone did not advance
 | 10-second timer plus published-table action query | Advanced | +326,952 bytes | 598,888 bytes |
 
 The action-query result is evidence for this setup, not a production guarantee; it does not prove every event reached a durable sink. The [full comparison and CSVs](results/m4-comparison.md) contain the configuration and measurements. A separate [repeatability check](results/m4-stability-repeat.md) reproduced the same outcome in all three cases.
-
-Debezium's [PostgreSQL documentation](https://debezium.io/documentation/reference/3.6/connectors/postgresql.html) describes heartbeat configuration for low-change workloads; in this setup, the timer alone did not advance the slot. In the paired 256 MiB disk-fill test, the no-heartbeat case filled the bounded filesystem after 23 completed batches: `confirmed_flush_lsn` stayed fixed and retained WAL reached 207,208,008 bytes, while Debezium health stayed UP in every sample before PostgreSQL crashed. With the published-table action query, all 30 batches completed; the heartbeat row's update count went from 1 to 34, `confirmed_flush_lsn` and `restart_lsn` advanced, and retained WAL peaked at 99,140,864 bytes. Peak data-directory usage was 182,669,312 of 268,435,456 bytes (about 68%), with 136,081,408 bytes free at the end. See the [no-heartbeat summary](results/disk-fill/20260928T214209Z-no-heartbeat/summary.md) and [action-query summary](results/disk-fill/20260928T214702Z-action-query/summary.md); each links its CSV and PostgreSQL log. The earlier stopped-connector runs are kept as historical experiments in [experiment history](docs/experiment-history.md), not as the incident reproduction.
 
 ## What to do
 

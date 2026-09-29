@@ -11,7 +11,8 @@ Debezium remained running throughout the workload. The workload wrote only to un
 - Peak retained-WAL distance: 207208008 bytes. Peak PostgreSQL data filesystem usage: 268435456 / 268435456 bytes.
 - PostgreSQL data filesystem: 48021504 / 268435456 bytes used at start; last successful sample 249835520 / 268435456 bytes used with 18599936 bytes available.
 - Terminal write result: PostgreSQL logged `No space left on device` and stopped during checkpoint/recovery; the client received PostgreSQL SQLSTATE 53100: could not write to file "pg_wal/xlogtemp.1152": No space left on device. Container state at the final metrics probe: `running`. See the [PostgreSQL log](postgres.log).
+- Crash-time health: PostgreSQL logged the disk-full `PANIC` at 2026-09-28 21:46:48.292 UTC. The final CSV sample began at 21:46:48.3758357 UTC, about 84 ms later, and still reported Debezium health `UP` while the PostgreSQL metrics query failed.
 - Final metrics query: unavailable after PostgreSQL stopped (`failed to connect to `user=postgres database=cdc_lab`: 127.0.0.1:55434 (127.0.0.1): server error: FATAL: could not write init file: No space left on device (SQLSTATE 53100)`). Last successful metrics are shown above.
 
 ## Verdict
-PostgreSQL ran out of space after 23 batches. Debezium health was UP in every sample until PostgreSQL crashed. The confirmed flush position stopped advancing while retained WAL grew. The bounded tmpfs and connector-offset volume were destroyed during cleanup.
+PostgreSQL ran out of space after 23 batches. Debezium health was UP in every sample, including the sample begun after PostgreSQL logged the disk-full `PANIC`. The confirmed flush position stopped advancing while retained WAL grew. The bounded tmpfs and connector-offset volume were destroyed during cleanup.
