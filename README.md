@@ -6,7 +6,7 @@ An earlier production incident filled a host disk after a Debezium replication s
 
 ## Finding
 
-Without a heartbeat, PostgreSQL filled the 256 MiB test filesystem on batch 24, after 23 completed batches, while Debezium health stayed UP. The final sample began about 84 ms after PostgreSQL logged the disk-full `PANIC`: health still read UP while its SQL metrics query failed.
+Without a heartbeat, PostgreSQL filled the 256 MiB test filesystem on batch 24, after 23 completed batches, while Debezium health stayed UP. In the first run, the final sample began about 84 ms after PostgreSQL logged the disk-full `PANIC` and still read Debezium health UP while its SQL metrics query failed. The repeat run's last sample began before the `PANIC`, so it neither confirms nor contradicts that post-crash health reading.
 
 With the published-table heartbeat action query, all 30 batches completed and the slot advanced. Peak filesystem use was 68%, but retained-WAL distance still peaked at 99,140,864 bytes. In this run the heartbeat limited slot lag; it did not eliminate WAL retention. Faster writes or a longer heartbeat interval can raise that peak, so the retained-WAL alert below still matters.
 
