@@ -1,6 +1,6 @@
 # CDC crash test
 
-![Retained-WAL distance over time for no heartbeat, timer-only, and published-table action-query runs; Debezium health was UP throughout.](docs/heartbeat-comparison.svg)
+![Paired disk-fill runs comparing retained WAL and PostgreSQL tmpfs usage: without a heartbeat the filesystem fills while Debezium remains healthy; the published-table action-query heartbeat keeps WAL and disk use below the cap.](docs/disk-fill-comparison.svg)
 
 An earlier production incident filled a host disk after a Debezium replication slot stopped advancing and retained PostgreSQL WAL. Multiple Debezium instances competed for the slot. This single-connector lab reproduces the stalled-slot consequences, not that competition or the missed alert; it measures the quiet-source failure mode at a small, controlled scale and compares heartbeat configurations.
 
