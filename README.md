@@ -12,6 +12,8 @@ With the published-table heartbeat action query, all 30 batches completed and th
 
 The [no-heartbeat summary](results/disk-fill/20260928T214209Z-no-heartbeat/summary.md) and [action-query summary](results/disk-fill/20260928T214702Z-action-query/summary.md) link the CSVs and PostgreSQL logs. The earlier stopped-connector runs are in [experiment history](docs/experiment-history.md).
 
+A [second independently reset pair](results/disk-fill-repeat.md) reproduced the bounded outcome: the no-heartbeat case ran out of space on batch 24, and the action-query case completed all 30 batches. This is two of two local paired trials, not a guarantee for every workload.
+
 ### Heartbeat comparison
 
 Debezium's [PostgreSQL documentation](https://debezium.io/documentation/reference/3.6/connectors/postgresql.html) describes heartbeat settings for low-change workloads. In three independently reset 10-minute runs, `heartbeat.interval.ms` alone did not advance the slot; updating a published heartbeat table did. Debezium health was UP and the slot active throughout all three runs.

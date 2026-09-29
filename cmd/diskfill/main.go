@@ -364,11 +364,7 @@ func writeSummary(path, scenario, postgresVersion string, initial, lastMeasured,
 	fmt.Fprintln(&b)
 	fmt.Fprintf(&b, "- PostgreSQL: %s. Debezium Server: 3.6.3.Final.\n", postgresVersion)
 	fmt.Fprintf(&b, "- Workload: %d completed batches out of a %d-batch budget, each %d rows of 1 MiB text, followed by `TRUNCATE`.\n", batches, maxBatches, rows)
-	healthWindow := "UP in every sample before PostgreSQL crashed"
-	if scenario == "action-query" {
-		healthWindow = "UP in every sample"
-	}
-	fmt.Fprintf(&b, "- Debezium health was `%s` at start; health was UP and the slot active in every sample %s: %t.\n", initial.debeziumHealth, strings.TrimPrefix(healthWindow, "UP in "), healthySamples)
+	fmt.Fprintf(&b, "- Debezium health was `%s` at start; health was UP and the slot active in every successful PostgreSQL metrics sample: %t.\n", initial.debeziumHealth, healthySamples)
 	if scenario == "no-heartbeat" {
 		fmt.Fprintf(&b, "- Heartbeat: disabled (`heartbeat.interval.ms=0`); confirmed flush LSN: `%s` at start to `%s` at last successful sample.\n", nullString(initial.confirmedFlushLSN), nullString(lastMeasured.confirmedFlushLSN))
 	} else {
@@ -380,7 +376,7 @@ func writeSummary(path, scenario, postgresVersion string, initial, lastMeasured,
 	fmt.Fprintf(&b, "- PostgreSQL data filesystem: %d / %d bytes used at start; last successful sample %d / %d bytes used with %d bytes available.\n", initial.pgdataUsedBytes, initial.pgdataCapacity, lastMeasured.pgdataUsedBytes, lastMeasured.pgdataCapacity, lastMeasured.pgdataAvailable)
 	fmt.Fprintf(&b, "- Terminal write result: %s. Container state at the final metrics probe: `%s`. See the [PostgreSQL log](postgres.log).\n", terminal, terminalObservation.postgresState)
 	if terminalObservation.postgresQueryError != "" {
-		fmt.Fprintf(&b, "- Final metrics query: unavailable after PostgreSQL stopped (`%s`). Last successful metrics are shown above.\n", terminalObservation.postgresQueryError)
+		fmt.Fprintf(&b, "- Final PostgreSQL metrics query failed (`%s`). Last successful metrics are shown above.\n", terminalObservation.postgresQueryError)
 	}
 	fmt.Fprintln(&b)
 	fmt.Fprintln(&b, "## Verdict")
